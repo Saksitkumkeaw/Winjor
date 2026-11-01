@@ -9,10 +9,10 @@
 ต้องมี Node.js 22.12 ขึ้นไป
 
 ```bash
-npm install
+npm ci
 ```
 
-คัดลอก `.env.example` เป็น `.env.local` แล้วใส่ค่าที่ได้จากเจ้าของโปรเจกต์ ส่วนการจ่ายเงินทดสอบต้องมีคีย์ลับของ Supabase และ Omise test mode
+คัดลอก `.env.example` เป็น `.env.local` แล้วใส่ค่าที่ได้จากเจ้าของโปรเจกต์ ถ้าไม่มี `.env.local` เว็บจะเริ่มไม่ได้ ส่วนการจ่ายเงินทดสอบต้องมีคีย์ลับของ Supabase และ Omise test mode
 
 ```bash
 npm run dev
