@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ROLE_HOME, safeNextPath, type Role } from "./roles";
+import { ROLE_HOME, safeNextPath } from "./roles";
 
 export type AuthState = {
   error?: string;
@@ -48,7 +48,7 @@ export async function signIn(
     .select("role")
     .eq("id", data.user.id)
     .single();
-  const home = ROLE_HOME[(profile?.role as Role | undefined) ?? "customer"];
+  const home = ROLE_HOME[profile?.role ?? "customer"];
 
   redirect(safeNextPath(formData.get("next"), home));
 }
