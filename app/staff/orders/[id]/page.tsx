@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
+import { PointsRedeem } from "@/components/member/points-redeem";
+import { MemberAttach } from "@/components/staff/member-attach";
 import { PosPayment } from "@/components/staff/pos-payment";
 import { StaffSection } from "@/components/staff/staff-section";
 import { buttonVariants } from "@/components/ui/button";
@@ -19,12 +21,20 @@ async function PosOrder({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_no, status, total, order_items(id, quantity, unit_price, products(name)), tickets(id, price, qr_token, seats(row_label, seat_number), showtimes(starts_at, movies(title), theaters(name)))",
+      "id, order_no, status, subtotal, discount, points_redeemed, total, customer_id, order_items(id, quantity, unit_price, products(name)), tickets(id, price, qr_token, seats(row_label, seat_number), showtimes(starts_at, movies(title), theaters(name)))",
     )
     .eq("id", id)
     .maybeSingle();
 
   if (!order) notFound();
+
+  const { data: member } = order.customer_id
+    ? await supabase
+        .from("profiles")
+        .select("full_name, points_balance")
+        .eq("id", order.customer_id)
+        .maybeSingle()
+    : { data: null };
 
   const tickets = await Promise.all(
     order.tickets.map(async (ticket) => ({
@@ -60,11 +70,34 @@ async function PosOrder({
               <span>{formatBaht(item.unit_price * item.quantity)}</span>
             </li>
           ))}
+          {order.discount > 0 ? (
+            <li className="flex justify-between gap-3 p-2">
+              <span>ส่วนลดจากคะแนน</span>
+              <span>-{formatBaht(order.discount)}</span>
+            </li>
+          ) : null}
           <li className="flex justify-between gap-3 p-2 font-semibold">
             <span>รวม</span>
             <span>{formatBaht(order.total)}</span>
           </li>
         </ul>
+        {member ? (
+          <p className="mt-3 text-sm">สมาชิก: {member.full_name}</p>
+        ) : null}
+        {order.status === "pending" ? (
+          <div className="mt-3">
+            {member ? (
+              <PointsRedeem
+                orderId={order.id}
+                balance={member.points_balance}
+                redeemed={order.points_redeemed}
+                subtotal={order.subtotal}
+              />
+            ) : (
+              <MemberAttach orderId={order.id} />
+            )}
+          </div>
+        ) : null}
       </section>
 
       <section>

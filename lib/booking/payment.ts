@@ -42,17 +42,28 @@ export async function syncCharge(chargeId: string): Promise<void> {
   });
   if (error) throw new Error(`finalize_order ล้มเหลว: ${error.message}`);
 
-  // จ่ายหลังหมดเวลา หรือจ่ายซ้ำด้วยอีกวิธีหนึ่ง จึงคืนเงินทันที
-  if (result !== "paid") {
-    await refundCharge(chargeId, payment.amount);
+  if (result === "paid") return;
+
+  // จ่ายหลังหมดเวลาหรือจ่ายซ้ำ บัตรคืนอัตโนมัติ ส่วน PromptPay ต้องให้ผู้ดูแลระบบคืนเอง
+  const refundReason =
+    result === "already_paid" ? "ชำระเงินซ้ำ" : "ชำระเงินหลังหมดเวลา";
+
+  if (!charge.refundable) {
     await admin
       .from("payments")
-      .update({
-        status: "refunded",
-        refunded_at: new Date().toISOString(),
-        refund_reason:
-          result === "already_paid" ? "ชำระเงินซ้ำ" : "ชำระเงินหลังหมดเวลา",
-      })
+      .update({ needs_refund: true, refund_reason: refundReason })
       .eq("id", payment.id);
+    return;
   }
+
+  await refundCharge(chargeId, payment.amount);
+  await admin
+    .from("payments")
+    .update({
+      status: "refunded",
+      refunded_at: new Date().toISOString(),
+      refund_reason: refundReason,
+      refund_method: "omise",
+    })
+    .eq("id", payment.id);
 }

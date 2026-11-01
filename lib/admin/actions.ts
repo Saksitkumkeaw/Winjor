@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { SECTION_ACCESS } from "@/lib/auth/roles";
+import { SECTION_ACCESS, type Role } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
+import { refundPaidOrder } from "@/lib/booking/refund";
+import { parseShift } from "@/lib/member/validation";
 import { createClient } from "@/lib/supabase/server";
 import {
   parseIngredient,
@@ -316,11 +318,94 @@ export async function adjustStock(
 
 export async function cancelShowtime(formData: FormData) {
   const supabase = await adminClient();
-  const { error } = await supabase
-    .from("showtimes")
-    .update({ status: "cancelled" })
-    .eq("id", String(formData.get("id")));
+  const { data: paidOrders, error } = await supabase.rpc("cancel_showtime", {
+    p_showtime_id: String(formData.get("id")),
+  });
   if (error) throw new Error("ยกเลิกรอบฉายไม่สำเร็จ");
 
+  let failed = 0;
+  for (const orderId of paidOrders ?? []) {
+    if (await refundPaidOrder(orderId, "ยกเลิกรอบฉาย")) failed += 1;
+  }
+
   revalidatePath("/admin/showtimes");
+  revalidatePath("/admin/orders");
+  if (failed) redirect("/admin/orders");
+}
+
+export async function refundOrder(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!reason) return { error: "กรุณากรอกเหตุผล" };
+
+  await adminClient();
+  const error = await refundPaidOrder(
+    String(formData.get("id")),
+    reason,
+    formData.get("manual_confirmed") === "on",
+  );
+  if (error) return { error };
+
+  revalidatePath("/admin/orders");
+  return { notice: "คืนเงินแล้ว" };
+}
+
+export async function markPaymentRefunded(formData: FormData) {
+  const supabase = await adminClient();
+  const { error } = await supabase.rpc("mark_payment_refunded", {
+    p_payment_id: String(formData.get("id")),
+  });
+  if (error) throw new Error("บันทึกการคืนเงินไม่สำเร็จ");
+
+  revalidatePath("/admin/orders");
+}
+
+export async function setUserRole(formData: FormData) {
+  const supabase = await adminClient();
+  const { error } = await supabase.rpc("set_user_role", {
+    p_user_id: String(formData.get("id")),
+    p_role: String(formData.get("role")) as Role,
+  });
+  if (error) throw new Error("เปลี่ยนบทบาทไม่สำเร็จ");
+
+  revalidatePath("/admin/users");
+}
+
+export async function saveShift(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = parseShift(formData);
+  if (!parsed.ok) return { error: parsed.error };
+
+  const profile = await requireRole(SECTION_ACCESS.admin, "/admin");
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("shifts")
+    .insert({ ...parsed.data, created_by: profile.id });
+
+  if (error) {
+    return {
+      error:
+        error.code === OVERLAPPING_SHOWTIME
+          ? "กะนี้ทับกับกะเดิมของพนักงานคนนี้"
+          : "เพิ่มกะไม่สำเร็จ",
+    };
+  }
+
+  revalidatePath("/admin/shifts");
+  return { notice: "เพิ่มกะแล้ว" };
+}
+
+export async function deleteShift(formData: FormData) {
+  const supabase = await adminClient();
+  const { error } = await supabase
+    .from("shifts")
+    .delete()
+    .eq("id", String(formData.get("id")));
+  if (error) throw new Error("ลบกะไม่สำเร็จ");
+
+  revalidatePath("/admin/shifts");
 }

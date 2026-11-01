@@ -16,7 +16,9 @@ import { SCAN_RESULT_LABEL } from "@/lib/pos/scan-results";
 import { cn } from "@/lib/utils";
 
 const READER_ID = "ticket-reader";
-const SAME_CODE_COOLDOWN_MS = 4000;
+// กล้องอ่าน QR เดิมซ้ำตลอดเวลาที่ถือตั๋วไว้ จึงนับจากครั้งล่าสุดที่เห็นรหัสนั้น
+const SAME_CODE_COOLDOWN_MS = 10_000;
+const RESULT_VISIBLE_MS = 6000;
 
 export function TicketScanner() {
   const [result, setResult] = useState<CheckInResult>();
@@ -72,11 +74,10 @@ export function TicketScanner() {
         (code) => {
           const now = Date.now();
           const last = lastScan.current;
-          if (code === last.code && now - last.at < SAME_CODE_COOLDOWN_MS) {
-            return;
-          }
+          const repeated =
+            code === last.code && now - last.at < SAME_CODE_COOLDOWN_MS;
           lastScan.current = { code, at: now };
-          submit(code);
+          if (!repeated) submit(code);
         },
         undefined,
       );
@@ -92,6 +93,13 @@ export function TicketScanner() {
       if (active?.isScanning) void active.stop();
     };
   }, []);
+
+  useEffect(() => {
+    if (!result) return;
+
+    const timer = setTimeout(() => setResult(undefined), RESULT_VISIBLE_MS);
+    return () => clearTimeout(timer);
+  }, [result]);
 
   function submitManual(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

@@ -13,6 +13,100 @@ export type Database = {
   };
   public: {
     Tables: {
+      attendance: {
+        Row: {
+          clock_in: string;
+          clock_out: string | null;
+          id: string;
+          shift_id: string | null;
+          staff_id: string;
+        };
+        Insert: {
+          clock_in?: string;
+          clock_out?: string | null;
+          id?: string;
+          shift_id?: string | null;
+          staff_id: string;
+        };
+        Update: {
+          clock_in?: string;
+          clock_out?: string | null;
+          id?: string;
+          shift_id?: string | null;
+          staff_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attendance_staff_id_fkey";
+            columns: ["staff_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      point_transactions: {
+        Row: {
+          created_at: string;
+          id: string;
+          order_id: string | null;
+          points: number;
+          profile_id: string;
+          type: Database["public"]["Enums"]["point_type"];
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          order_id?: string | null;
+          points: number;
+          profile_id: string;
+          type: Database["public"]["Enums"]["point_type"];
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          order_id?: string | null;
+          points?: number;
+          profile_id?: string;
+          type?: Database["public"]["Enums"]["point_type"];
+        };
+        Relationships: [];
+      };
+      shifts: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          ends_at: string;
+          id: string;
+          staff_id: string;
+          starts_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          ends_at: string;
+          id?: string;
+          staff_id: string;
+          starts_at: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          ends_at?: string;
+          id?: string;
+          staff_id?: string;
+          starts_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shifts_staff_id_fkey";
+            columns: ["staff_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ingredients: {
         Row: {
           created_at: string;
@@ -198,6 +292,7 @@ export type Database = {
           expires_at: string;
           id: string;
           items_picked_up_at: string | null;
+          points_redeemed: number;
           order_no: string;
           sold_by: string | null;
           status: Database["public"]["Enums"]["order_status"];
@@ -212,6 +307,7 @@ export type Database = {
           expires_at: string;
           id?: string;
           items_picked_up_at?: string | null;
+          points_redeemed?: number;
           order_no?: string;
           sold_by?: string | null;
           status?: Database["public"]["Enums"]["order_status"];
@@ -226,6 +322,7 @@ export type Database = {
           expires_at?: string;
           id?: string;
           items_picked_up_at?: string | null;
+          points_redeemed?: number;
           order_no?: string;
           sold_by?: string | null;
           status?: Database["public"]["Enums"]["order_status"];
@@ -240,11 +337,13 @@ export type Database = {
           created_at: string;
           id: string;
           method: Database["public"]["Enums"]["payment_method"];
+          needs_refund: boolean;
           order_id: string;
           paid_at: string | null;
           provider: string | null;
           provider_charge_id: string | null;
           received_by: string | null;
+          refund_method: string | null;
           refund_reason: string | null;
           refunded_at: string | null;
           refunded_by: string | null;
@@ -259,7 +358,9 @@ export type Database = {
           paid_at?: string | null;
           provider?: string | null;
           provider_charge_id?: string | null;
+          needs_refund?: boolean;
           received_by?: string | null;
+          refund_method?: string | null;
           refund_reason?: string | null;
           refunded_at?: string | null;
           refunded_by?: string | null;
@@ -274,13 +375,23 @@ export type Database = {
           paid_at?: string | null;
           provider?: string | null;
           provider_charge_id?: string | null;
+          needs_refund?: boolean;
           received_by?: string | null;
+          refund_method?: string | null;
           refund_reason?: string | null;
           refunded_at?: string | null;
           refunded_by?: string | null;
           status?: Database["public"]["Enums"]["payment_status"];
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       products: {
         Row: {
@@ -600,6 +711,37 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      sales_report: { Args: { p_from: string; p_to: string }; Returns: Json };
+      apply_points: {
+        Args: { p_order_id: string; p_points: number };
+        Returns: undefined;
+      };
+      cancel_showtime: { Args: { p_showtime_id: string }; Returns: string[] };
+      clock_in: { Args: never; Returns: undefined };
+      clock_out: { Args: never; Returns: undefined };
+      complete_refund: {
+        Args: {
+          p_order_id: string;
+          p_reason: string;
+          p_refund_method: string;
+        };
+        Returns: undefined;
+      };
+      mark_payment_refunded: {
+        Args: { p_payment_id: string };
+        Returns: undefined;
+      };
+      pos_attach_member: {
+        Args: { p_order_id: string; p_phone: string };
+        Returns: Json;
+      };
+      set_user_role: {
+        Args: {
+          p_role: Database["public"]["Enums"]["app_role"];
+          p_user_id: string;
+        };
+        Returns: undefined;
+      };
       adjust_stock: {
         Args: {
           p_change: number;
@@ -650,6 +792,7 @@ export type Database = {
       order_status: "pending" | "paid" | "expired" | "cancelled" | "refunded";
       payment_method: "card" | "promptpay" | "cash";
       payment_status: "pending" | "succeeded" | "failed" | "refunded";
+      point_type: "earn" | "redeem" | "reverse";
       showtime_status: "scheduled" | "cancelled";
       stock_reason: "purchase" | "sale" | "adjustment";
       ticket_status: "held" | "paid" | "used" | "released" | "refunded";

@@ -8,6 +8,8 @@ const NAV_ITEMS = [
   { href: "/staff/sale", label: "ขายสินค้า" },
   { href: "/staff/scan", label: "สแกนและรับสินค้า" },
   { href: "/staff/scan-log", label: "ประวัติการสแกน" },
+  { href: "/staff/members", label: "สมาชิก" },
+  { href: "/staff/attendance", label: "ลงเวลางาน" },
 ];
 
 export function StaffSection({

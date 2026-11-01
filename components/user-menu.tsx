@@ -20,6 +20,9 @@ export async function UserMenu() {
       <Link href="/tickets" className="text-sm hover:underline">
         ตั๋วของฉัน
       </Link>
+      <Link href="/account" className="text-sm hover:underline">
+        บัญชี
+      </Link>
       <Link href={ROLE_HOME[profile.role]} className="text-sm hover:underline">
         {profile.fullName || "บัญชีของฉัน"}
         <span className="ml-1 text-muted-foreground">

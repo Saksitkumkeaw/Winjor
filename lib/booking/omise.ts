@@ -18,7 +18,10 @@ async function omiseRequest<T>(path: string, body?: URLSearchParams): Promise<T>
   });
 
   if (!response.ok) {
-    throw new Error(`Omise ตอบกลับ ${response.status}`);
+    const failure = (await response.json().catch(() => null)) as {
+      message?: string;
+    } | null;
+    throw new Error(failure?.message ?? `Omise ตอบกลับ ${response.status}`);
   }
   return response.json() as Promise<T>;
 }
