@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { formatBaht } from "@/lib/admin/format";
 import { holdSeats } from "@/lib/booking/actions";
+import { posCreateOrder } from "@/lib/pos/actions";
 import { createClient } from "@/lib/supabase/client";
 import type { ShowtimeSeat, Tables } from "@/lib/supabase/database.types";
 import { cn } from "@/lib/utils";
@@ -18,10 +19,13 @@ export function SeatPicker({
   showtimeId,
   initialSeats,
   products,
+  mode = "online",
 }: {
-  showtimeId: string;
+  // หน้าร้านขายสินค้าอย่างเดียวได้ จึงไม่จำเป็นต้องมีรอบฉาย
+  showtimeId: string | null;
   initialSeats: ShowtimeSeat[];
   products: Product[];
+  mode?: "online" | "pos";
 }) {
   const [seats, setSeats] = useState(initialSeats);
   const [selected, setSelected] = useState<string[]>([]);
@@ -30,11 +34,14 @@ export function SeatPicker({
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
+    if (!showtimeId) return;
+
+    const liveShowtimeId = showtimeId;
     const supabase = createClient();
 
     async function refresh() {
       const { data } = await supabase.rpc("get_showtime_seats", {
-        p_showtime_id: showtimeId,
+        p_showtime_id: liveShowtimeId,
       });
       if (!data) return;
 
@@ -117,22 +124,26 @@ export function SeatPicker({
 
   function confirm() {
     setError(undefined);
+    const orderItems = items.map((item) => ({
+      product_id: item.product.id,
+      quantity: item.quantity,
+    }));
+
     startTransition(async () => {
-      const result = await holdSeats(
-        showtimeId,
-        chosenIds,
-        items.map((item) => ({
-          product_id: item.product.id,
-          quantity: item.quantity,
-        })),
-      );
+      const result =
+        mode === "pos"
+          ? await posCreateOrder(showtimeId, chosenIds, orderItems)
+          : await holdSeats(showtimeId ?? "", chosenIds, orderItems);
       if (result?.error) setError(result.error);
     });
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="overflow-x-auto rounded-lg border p-3">
+      <div
+        hidden={!showtimeId}
+        className="overflow-x-auto rounded-lg border p-3"
+      >
         <div className="mb-4 rounded bg-muted py-1 text-center text-sm text-muted-foreground">
           จอภาพยนตร์
         </div>
@@ -186,7 +197,9 @@ export function SeatPicker({
 
       {products.length ? (
         <section>
-          <h2 className="mb-2 font-medium">เพิ่มสินค้า (ไม่บังคับ)</h2>
+          <h2 className="mb-2 font-medium">
+            {showtimeId ? "เพิ่มสินค้า (ไม่บังคับ)" : "เลือกสินค้า"}
+          </h2>
           <ul className="divide-y rounded-lg border">
             {products.map((product) => (
               <li
@@ -235,17 +248,26 @@ export function SeatPicker({
               ? chosen
                   .map((seat) => `${seat.row_label}${seat.seat_number}`)
                   .join(", ")
-              : "ยังไม่ได้เลือกที่นั่ง"}
+              : showtimeId
+                ? "ยังไม่ได้เลือกที่นั่ง"
+                : "ขายสินค้าอย่างเดียว"}
           </div>
           <div className="font-semibold">{formatBaht(total)}</div>
         </div>
         <Button
           type="button"
           size="lg"
-          disabled={pending || chosen.length === 0}
+          disabled={
+            pending ||
+            (chosen.length === 0 && (mode === "online" || items.length === 0))
+          }
           onClick={confirm}
         >
-          {pending ? "กำลังล็อกที่นั่ง…" : "ยืนยันที่นั่ง"}
+          {pending
+            ? "กำลังดำเนินการ…"
+            : mode === "pos"
+              ? "ไปหน้ารับเงิน"
+              : "ยืนยันที่นั่ง"}
         </Button>
       </div>
       {error || lostSeat ? (

@@ -3,9 +3,13 @@ import { bangkokDate, formatTime, nextDate, toBangkokIso } from "./format";
 import {
   MAX_SEATS_PER_ROW,
   MAX_THEATER_ROWS,
+  parseIngredient,
   parseMovie,
+  parseProduct,
+  parseRecipeItem,
   parseSeatType,
   parseShowtime,
+  parseStockChange,
   parseTheater,
   posterExtension,
 } from "./validation";
@@ -62,6 +66,52 @@ describe("parseSeatType", () => {
 
   it("ปฏิเสธราคาติดลบ", () => {
     expect(parseSeatType(form({ name: "VIP", surcharge: "-1" })).ok).toBe(false);
+  });
+});
+
+describe("parseProduct", () => {
+  it("ปฏิเสธชื่อว่างและราคาผิด", () => {
+    expect(parseProduct(form({ name: " ", price: "60" })).ok).toBe(false);
+    expect(parseProduct(form({ name: "ป๊อปคอร์น", price: "abc" })).ok).toBe(false);
+  });
+});
+
+describe("parseRecipeItem", () => {
+  it("ปริมาณต้องมากกว่า 0", () => {
+    const zero = { ingredient_id: "i", quantity: "0" };
+    expect(parseRecipeItem(form(zero)).ok).toBe(false);
+  });
+});
+
+describe("parseIngredient", () => {
+  it("ต้องมีหน่วย", () => {
+    const missing = { name: "เนย", unit: "", reorder_level: "10" };
+    expect(parseIngredient(form(missing)).ok).toBe(false);
+  });
+});
+
+describe("parseStockChange", () => {
+  const purchase = { ingredient_id: "i", change: "100", reason: "purchase" };
+
+  it("รับเข้าสต็อกเป็นจำนวนบวก", () => {
+    expect(parseStockChange(form(purchase))).toEqual({
+      ok: true,
+      data: { ingredient_id: "i", change: 100, reason: "purchase" },
+    });
+  });
+
+  it("การปรับยอดใช้จำนวนลบได้", () => {
+    const adjustment = { ...purchase, change: "-5", reason: "adjustment" };
+    expect(parseStockChange(form(adjustment)).ok).toBe(true);
+  });
+
+  it.each([
+    [{ ...purchase, change: "-5" }],
+    [{ ...purchase, change: "0" }],
+    [{ ...purchase, change: "abc" }],
+    [{ ...purchase, reason: "sale" }],
+  ])("ปฏิเสธ %j", (values) => {
+    expect(parseStockChange(form(values)).ok).toBe(false);
   });
 });
 
