@@ -29,7 +29,7 @@ export const getCurrentProfile = cache(
       .single();
     if (!data) return null;
 
-    return { id: user.id, fullName: data.full_name, role: data.role as Role };
+    return { id: user.id, fullName: data.full_name, role: data.role };
   },
 );
 
