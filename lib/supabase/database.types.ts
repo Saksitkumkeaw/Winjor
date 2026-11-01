@@ -13,6 +13,104 @@ export type Database = {
   };
   public: {
     Tables: {
+      ingredients: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          quantity_on_hand: number;
+          reorder_level: number;
+          unit: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          quantity_on_hand?: number;
+          reorder_level?: number;
+          unit: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          quantity_on_hand?: number;
+          reorder_level?: number;
+          unit?: string;
+        };
+        Relationships: [];
+      };
+      product_recipes: {
+        Row: {
+          ingredient_id: string;
+          product_id: string;
+          quantity: number;
+        };
+        Insert: {
+          ingredient_id: string;
+          product_id: string;
+          quantity: number;
+        };
+        Update: {
+          ingredient_id?: string;
+          product_id?: string;
+          quantity?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_recipes_ingredient_id_fkey";
+            columns: ["ingredient_id"];
+            isOneToOne: false;
+            referencedRelation: "ingredients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_recipes_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      stock_movements: {
+        Row: {
+          change_qty: number;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          ingredient_id: string;
+          order_id: string | null;
+          reason: Database["public"]["Enums"]["stock_reason"];
+        };
+        Insert: {
+          change_qty: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          ingredient_id: string;
+          order_id?: string | null;
+          reason: Database["public"]["Enums"]["stock_reason"];
+        };
+        Update: {
+          change_qty?: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          ingredient_id?: string;
+          order_id?: string | null;
+          reason?: Database["public"]["Enums"]["stock_reason"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_ingredient_id_fkey";
+            columns: ["ingredient_id"];
+            isOneToOne: false;
+            referencedRelation: "ingredients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       movies: {
         Row: {
           created_at: string;
@@ -238,6 +336,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      scan_logs: {
+        Row: {
+          created_at: string;
+          id: string;
+          input_hint: string;
+          result: string;
+          staff_id: string | null;
+          ticket_id: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          input_hint: string;
+          result: string;
+          staff_id?: string | null;
+          ticket_id?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          input_hint?: string;
+          result?: string;
+          staff_id?: string | null;
+          ticket_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "scan_logs_staff_id_fkey";
+            columns: ["staff_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "scan_logs_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "tickets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       seat_types: {
         Row: {
           created_at: string;
@@ -460,7 +600,27 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      adjust_stock: {
+        Args: {
+          p_change: number;
+          p_ingredient_id: string;
+          p_reason: Database["public"]["Enums"]["stock_reason"];
+        };
+        Returns: undefined;
+      };
       cancel_order: { Args: { p_order_id: string }; Returns: undefined };
+      check_in_ticket: { Args: { p_qr_token: string }; Returns: Json };
+      pickup_order_items: { Args: { p_order_no: string }; Returns: Json };
+      pos_cancel_order: { Args: { p_order_id: string }; Returns: undefined };
+      pos_confirm_cash: { Args: { p_order_id: string }; Returns: string };
+      pos_create_order: {
+        Args: {
+          p_items?: Json;
+          p_seat_ids?: string[];
+          p_showtime_id?: string;
+        };
+        Returns: string;
+      };
       create_theater: {
         Args: { p_name: string; p_rows: number; p_seats_per_row: number };
         Returns: string;
@@ -491,6 +651,7 @@ export type Database = {
       payment_method: "card" | "promptpay" | "cash";
       payment_status: "pending" | "succeeded" | "failed" | "refunded";
       showtime_status: "scheduled" | "cancelled";
+      stock_reason: "purchase" | "sale" | "adjustment";
       ticket_status: "held" | "paid" | "used" | "released" | "refunded";
     };
     CompositeTypes: {

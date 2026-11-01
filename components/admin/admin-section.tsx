@@ -9,6 +9,8 @@ const NAV_ITEMS = [
   { href: "/admin/showtimes", label: "รอบฉาย" },
   { href: "/admin/theaters", label: "โรงและผังที่นั่ง" },
   { href: "/admin/seat-types", label: "ราคาตั๋ว" },
+  { href: "/admin/products", label: "สินค้า" },
+  { href: "/admin/stock", label: "สต็อก" },
 ];
 
 export function AdminSection({

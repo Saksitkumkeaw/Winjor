@@ -6,9 +6,13 @@ import { SECTION_ACCESS } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import {
+  parseIngredient,
   parseMovie,
+  parseProduct,
+  parseRecipeItem,
   parseSeatType,
   parseShowtime,
+  parseStockChange,
   parseTheater,
   posterExtension,
 } from "./validation";
@@ -188,6 +192,126 @@ export async function createShowtime(
 
   revalidatePath("/admin/showtimes");
   return { notice: "เพิ่มรอบฉายแล้ว" };
+}
+
+export async function saveProduct(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = parseProduct(formData);
+  if (!parsed.ok) return { error: parsed.error };
+
+  const supabase = await adminClient();
+  const id = formData.get("id");
+
+  if (typeof id === "string" && id) {
+    const { error } = await supabase
+      .from("products")
+      .update(parsed.data)
+      .eq("id", id);
+    if (error) return { error: "บันทึกสินค้าไม่สำเร็จ" };
+
+    revalidatePath("/admin/products");
+    return { notice: "บันทึกแล้ว" };
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .insert(parsed.data)
+    .select("id")
+    .single();
+  if (error) return { error: "เพิ่มสินค้าไม่สำเร็จ" };
+
+  revalidatePath("/admin/products");
+  redirect(`/admin/products/${data.id}`);
+}
+
+export async function setProductActive(formData: FormData) {
+  const supabase = await adminClient();
+  const { error } = await supabase
+    .from("products")
+    .update({ is_active: formData.get("is_active") === "true" })
+    .eq("id", String(formData.get("id")));
+  if (error) throw new Error("เปลี่ยนสถานะสินค้าไม่สำเร็จ");
+
+  revalidatePath("/admin/products");
+}
+
+export async function saveRecipeItem(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = parseRecipeItem(formData);
+  if (!parsed.ok) return { error: parsed.error };
+
+  const productId = String(formData.get("product_id"));
+  const supabase = await adminClient();
+  const { error } = await supabase
+    .from("product_recipes")
+    .upsert({ product_id: productId, ...parsed.data });
+  if (error) return { error: "บันทึกสูตรไม่สำเร็จ" };
+
+  revalidatePath(`/admin/products/${productId}`);
+  return { notice: "บันทึกแล้ว" };
+}
+
+export async function removeRecipeItem(formData: FormData) {
+  const productId = String(formData.get("product_id"));
+  const supabase = await adminClient();
+  const { error } = await supabase
+    .from("product_recipes")
+    .delete()
+    .eq("product_id", productId)
+    .eq("ingredient_id", String(formData.get("ingredient_id")));
+  if (error) throw new Error("ลบรายการในสูตรไม่สำเร็จ");
+
+  revalidatePath(`/admin/products/${productId}`);
+}
+
+export async function saveIngredient(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = parseIngredient(formData);
+  if (!parsed.ok) return { error: parsed.error };
+
+  const supabase = await adminClient();
+  const id = formData.get("id");
+  const { error } =
+    typeof id === "string" && id
+      ? await supabase.from("ingredients").update(parsed.data).eq("id", id)
+      : await supabase.from("ingredients").insert(parsed.data);
+
+  if (error) {
+    return {
+      error:
+        error.code === DUPLICATE_KEY
+          ? "มีวัตถุดิบชื่อนี้แล้ว"
+          : "บันทึกวัตถุดิบไม่สำเร็จ",
+    };
+  }
+
+  revalidatePath("/admin/stock");
+  return { notice: "บันทึกแล้ว" };
+}
+
+export async function adjustStock(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = parseStockChange(formData);
+  if (!parsed.ok) return { error: parsed.error };
+
+  const supabase = await adminClient();
+  const { error } = await supabase.rpc("adjust_stock", {
+    p_ingredient_id: parsed.data.ingredient_id,
+    p_change: parsed.data.change,
+    p_reason: parsed.data.reason,
+  });
+  if (error) return { error: "บันทึกสต็อกไม่สำเร็จ" };
+
+  revalidatePath("/admin/stock");
+  return { notice: "บันทึกสต็อกแล้ว" };
 }
 
 export async function cancelShowtime(formData: FormData) {

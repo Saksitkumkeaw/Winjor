@@ -96,6 +96,69 @@ export function parseSeatType(
   return { ok: true, data: { name, surcharge } };
 }
 
+export function parseProduct(
+  form: FormData,
+): Parsed<{ name: string; price: number }> {
+  const name = text(form, "name");
+  const price = amount(form, "price");
+
+  if (!name) return fail("กรุณากรอกชื่อสินค้า");
+  if (Number.isNaN(price)) return fail("ราคาต้องเป็นตัวเลขตั้งแต่ 0");
+
+  return { ok: true, data: { name, price } };
+}
+
+export function parseRecipeItem(
+  form: FormData,
+): Parsed<{ ingredient_id: string; quantity: number }> {
+  const ingredientId = text(form, "ingredient_id");
+  const quantity = amount(form, "quantity");
+
+  if (!ingredientId) return fail("กรุณาเลือกวัตถุดิบ");
+  if (!(quantity > 0)) return fail("ปริมาณต้องมากกว่า 0");
+
+  return { ok: true, data: { ingredient_id: ingredientId, quantity } };
+}
+
+export function parseIngredient(
+  form: FormData,
+): Parsed<{ name: string; unit: string; reorder_level: number }> {
+  const name = text(form, "name");
+  const unit = text(form, "unit");
+  const reorderLevel = amount(form, "reorder_level");
+
+  if (!name) return fail("กรุณากรอกชื่อวัตถุดิบ");
+  if (!unit) return fail("กรุณากรอกหน่วย");
+  if (Number.isNaN(reorderLevel)) {
+    return fail("จุดแจ้งเตือนต้องเป็นตัวเลขตั้งแต่ 0");
+  }
+
+  return { ok: true, data: { name, unit, reorder_level: reorderLevel } };
+}
+
+export function parseStockChange(form: FormData): Parsed<{
+  ingredient_id: string;
+  change: number;
+  reason: "purchase" | "adjustment";
+}> {
+  const ingredientId = text(form, "ingredient_id");
+  const change = Number(text(form, "change"));
+  const reason = text(form, "reason");
+
+  if (!ingredientId) return fail("กรุณาเลือกวัตถุดิบ");
+  if (reason !== "purchase" && reason !== "adjustment") {
+    return fail("ประเภทรายการไม่ถูกต้อง");
+  }
+  if (!Number.isFinite(change) || change === 0) {
+    return fail("จำนวนต้องเป็นตัวเลขที่ไม่ใช่ 0");
+  }
+  if (reason === "purchase" && change < 0) {
+    return fail("การรับเข้าต้องเป็นจำนวนบวก");
+  }
+
+  return { ok: true, data: { ingredient_id: ingredientId, change, reason } };
+}
+
 export function parseTheater(
   form: FormData,
 ): Parsed<{ name: string; rows: number; seatsPerRow: number }> {
