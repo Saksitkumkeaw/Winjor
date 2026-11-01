@@ -1,9 +1,13 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import type { Database } from "./database.types";
 
 export async function createClient() {
+  // Supabase อ่าน Date.now() เพื่อตรวจอายุ session จึงต้องหยุด prerender ก่อนสร้าง client
+  await connection();
+
   const cookieStore = await cookies();
 
   return createServerClient<Database>(

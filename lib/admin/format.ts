@@ -36,6 +36,15 @@ export function formatTime(iso: string): string {
   }).format(new Date(iso));
 }
 
+export function formatDate(iso: string): string {
+  return new Intl.DateTimeFormat("th-TH", {
+    timeZone: TIME_ZONE,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(new Date(iso));
+}
+
 export function formatBaht(amount: number): string {
   return `${amount.toLocaleString("th-TH")} บาท`;
 }
