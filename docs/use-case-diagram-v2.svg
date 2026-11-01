@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 1382" width="1120" height="1382" font-family="Noto Sans Thai, Leelawadee UI, Tahoma, sans-serif">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10" fill="none" stroke="#444" stroke-width="1.6"/></marker></defs>
+<rect width="1120" height="1382" fill="#fff"/>
+<rect x="250" y="40" width="640" height="1312" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<text x="570" y="70" text-anchor="middle" font-size="17" font-weight="600" fill="#222">ระบบบริหารจัดการโรงภาพยนตร์</text>
+<line x1="129" y1="308" x2="355" y2="110" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="308" x2="355" y2="176" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="308" x2="355" y2="242" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="308" x2="355" y2="308" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="308" x2="355" y2="374" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="308" x2="355" y2="440" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="308" x2="355" y2="572" stroke="#555" stroke-width="1.2"/>
+<g stroke="#222" stroke-width="1.8" fill="none"><circle cx="95" cy="274" r="15" fill="#fff"/><path d="M95 289 V332 M69 306 H121 M95 332 L73 364 M95 332 L117 364"/></g>
+<text x="95" y="386" text-anchor="middle" font-size="15" font-weight="600" fill="#222">ลูกค้า</text>
+<line x1="129" y1="704" x2="355" y2="110" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="704" x2="355" y2="374" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="704" x2="355" y2="440" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="704" x2="355" y2="638" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="704" x2="355" y2="704" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="704" x2="355" y2="770" stroke="#555" stroke-width="1.2"/>
+<g stroke="#222" stroke-width="1.8" fill="none"><circle cx="95" cy="670" r="15" fill="#fff"/><path d="M95 685 V728 M69 702 H121 M95 728 L73 760 M95 728 L117 760"/></g>
+<text x="95" y="782" text-anchor="middle" font-size="15" font-weight="600" fill="#222">พนักงานหน้าร้าน</text>
+<line x1="129" y1="1001" x2="355" y2="110" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="1001" x2="355" y2="836" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="1001" x2="355" y2="902" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="1001" x2="355" y2="968" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="1001" x2="355" y2="1034" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="1001" x2="355" y2="1100" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="1001" x2="355" y2="1166" stroke="#555" stroke-width="1.2"/>
+<g stroke="#222" stroke-width="1.8" fill="none"><circle cx="95" cy="967" r="15" fill="#fff"/><path d="M95 982 V1025 M69 999 H121 M95 1025 L73 1057 M95 1025 L117 1057"/></g>
+<text x="95" y="1079" text-anchor="middle" font-size="15" font-weight="600" fill="#222">ผู้ดูแลระบบ</text>
+<line x1="129" y1="1232" x2="355" y2="110" stroke="#555" stroke-width="1.2"/>
+<line x1="129" y1="1232" x2="355" y2="1232" stroke="#555" stroke-width="1.2"/>
+<g stroke="#222" stroke-width="1.8" fill="none"><circle cx="95" cy="1198" r="15" fill="#fff"/><path d="M95 1213 V1256 M69 1230 H121 M95 1256 L73 1288 M95 1256 L117 1288"/></g>
+<text x="95" y="1310" text-anchor="middle" font-size="15" font-weight="600" fill="#222">ผู้บริหาร</text>
+<line x1="986" y1="506" x2="765" y2="506" stroke="#555" stroke-width="1.2"/>
+<line x1="986" y1="506" x2="765" y2="1166" stroke="#555" stroke-width="1.2"/>
+<g stroke="#222" stroke-width="1.8" fill="none"><circle cx="1020" cy="472" r="15" fill="#fff"/><path d="M1020 487 V530 M994 504 H1046 M1020 530 L998 562 M1020 530 L1042 562"/></g>
+<text x="1020" y="584" text-anchor="middle" font-size="15" font-weight="600" fill="#222">Payment Gateway</text>
+<text x="1020" y="603" text-anchor="middle" font-size="13" fill="#555">(ระบบภายนอก)</text>
+<ellipse cx="560" cy="110" rx="205" ry="26" fill="#dff3e4" stroke="#2e7d4f" stroke-width="1.5"/>
+<text x="560" y="115" text-anchor="middle" font-size="14" fill="#222">UC-01 เข้าสู่ระบบ</text>
+<ellipse cx="560" cy="176" rx="205" ry="26" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<text x="560" y="181" text-anchor="middle" font-size="14" fill="#222">UC-02 ค้นหาหนังและเช็ครอบฉาย</text>
+<ellipse cx="560" cy="242" rx="205" ry="26" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<text x="560" y="247" text-anchor="middle" font-size="14" fill="#222">UC-03 จองตั๋วและเลือกที่นั่ง</text>
+<ellipse cx="560" cy="308" rx="205" ry="26" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<text x="560" y="313" text-anchor="middle" font-size="14" fill="#222">UC-04 สั่งซื้อสินค้า/ป๊อปคอร์น, น้ำอัดลม</text>
+<ellipse cx="560" cy="374" rx="205" ry="26" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<text x="560" y="379" text-anchor="middle" font-size="14" fill="#222">UC-07 สมัครสมาชิก/สะสมคะแนน</text>
+<ellipse cx="560" cy="440" rx="205" ry="26" fill="#dff3e4" stroke="#2e7d4f" stroke-width="1.5"/>
+<text x="560" y="445" text-anchor="middle" font-size="14" fill="#222">UC-08 แลกคะแนน</text>
+<ellipse cx="560" cy="506" rx="205" ry="26" fill="#fff1cc" stroke="#a87a00" stroke-width="1.5"/>
+<text x="560" y="511" text-anchor="middle" font-size="14" fill="#222">UC-06 ตรวจสอบและตัดยอดการชำระเงิน</text>
+<ellipse cx="560" cy="572" rx="205" ry="26" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<text x="560" y="577" text-anchor="middle" font-size="14" fill="#222">UC-05 ชำระเงิน</text>
+<ellipse cx="560" cy="638" rx="205" ry="26" fill="#fff1cc" stroke="#a87a00" stroke-width="1.5"/>
+<text x="560" y="643" text-anchor="middle" font-size="14" fill="#222">UC-09 ขายตั๋วและสินค้าหน้าร้าน</text>
+<ellipse cx="560" cy="704" rx="205" ry="26" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<text x="560" y="709" text-anchor="middle" font-size="14" fill="#222">UC-10 ตรวจสอบ/สแกนตั๋วเข้าชม</text>
+<ellipse cx="560" cy="770" rx="205" ry="26" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<text x="560" y="775" text-anchor="middle" font-size="14" fill="#222">UC-11 บันทึกเวลาเข้า-ออกงาน</text>
+<ellipse cx="560" cy="836" rx="205" ry="26" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<text x="560" y="841" text-anchor="middle" font-size="14" fill="#222">UC-12 จัดการข้อมูลภาพยนตร์และรอบฉาย</text>
+<ellipse cx="560" cy="902" rx="205" ry="26" fill="#dff3e4" stroke="#2e7d4f" stroke-width="1.5"/>
+<text x="560" y="907" text-anchor="middle" font-size="14" fill="#222">UC-13 กำหนดราคาตั๋ว</text>
+<ellipse cx="560" cy="968" rx="205" ry="26" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<text x="560" y="973" text-anchor="middle" font-size="14" fill="#222">UC-14 จัดการผังที่นั่งและโรงภาพยนตร์</text>
+<ellipse cx="560" cy="1034" rx="205" ry="26" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<text x="560" y="1039" text-anchor="middle" font-size="14" fill="#222">UC-15 จัดการสต็อกสินค้าและวัตถุดิบ</text>
+<ellipse cx="560" cy="1100" rx="205" ry="26" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<text x="560" y="1105" text-anchor="middle" font-size="14" fill="#222">UC-16 จัดตารางกะพนักงานและสิทธิ์ผู้ใช้</text>
+<ellipse cx="560" cy="1166" rx="205" ry="26" fill="#dff3e4" stroke="#2e7d4f" stroke-width="1.5"/>
+<text x="560" y="1171" text-anchor="middle" font-size="14" fill="#222">UC-17 ยกเลิกการจอง/คืนเงิน</text>
+<ellipse cx="560" cy="1232" rx="205" ry="26" fill="#fff" stroke="#333" stroke-width="1.5"/>
+<text x="560" y="1237" text-anchor="middle" font-size="14" fill="#222">UC-18 ดูรายงานสรุปยอดขายและอัตราการเข้าชม</text>
+<path d="M695.6 552.5 C785.5947546920603 552.5, 785.5947546920603 525.5, 701.6 525.5" fill="none" stroke="#444" stroke-width="1.3" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<text x="767.6" y="543" font-size="12" fill="#444">«include»</text>
+<path d="M695.6 618.5 C785.5947546920603 618.5, 785.5947546920603 591.5, 701.6 591.5" fill="none" stroke="#444" stroke-width="1.3" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<text x="767.6" y="609" font-size="12" fill="#444">«include»</text>
+<g font-size="13" fill="#222"><ellipse cx="310" cy="1317" rx="20" ry="10" fill="#dff3e4" stroke="#2e7d4f" stroke-width="1.5"/><text x="338" y="1322">เพิ่มใหม่</text><ellipse cx="450" cy="1317" rx="20" ry="10" fill="#fff1cc" stroke="#a87a00" stroke-width="1.5"/><text x="478" y="1322">แก้ไขจากเดิม</text><ellipse cx="620" cy="1317" rx="20" ry="10" fill="#fff" stroke="#333" stroke-width="1.5"/><text x="648" y="1322">เดิม</text></g>
+</svg>

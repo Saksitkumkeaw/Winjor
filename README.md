@@ -2,11 +2,20 @@
 
 เว็บแอปสำหรับจัดการโรงภาพยนตร์ ครอบคลุมการจองตั๋วออนไลน์ การขายหน้าร้าน สต็อกสินค้า พนักงาน และรายงานสำหรับผู้บริหาร
 
-> สถานะ: ยังไม่เริ่มเขียนโค้ด อยู่ระหว่างวางแผน
+> สถานะ: ร่างเฟส 0 เสร็จแล้ว รอทีมตรวจ ยังไม่เริ่มเขียนโค้ด
 
 ## Use Case Diagram
 
-![Use case diagram](docs/use-case-diagram.png)
+![Use case diagram](docs/use-case-diagram-v2.svg)
+
+ดู [diagram เวอร์ชันแรก](docs/use-case-diagram.png) ได้ที่นี่
+
+## เอกสารออกแบบ
+
+- [ขอบเขตและกติการะบบ](docs/requirements.md)
+- [โครงสร้างฐานข้อมูล](docs/database.md)
+- [Flow การจองและชำระเงิน](docs/booking-flow.md)
+- [Wireframe หน้าจอหลัก](docs/wireframes.png)
 
 ## ส่วนของระบบ
 

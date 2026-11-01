@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Wireframe ระบบโรงภาพยนตร์</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px; background: #f4f4f4; color: #222; font-family: "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif; font-size: 14px; }
+  h1 { margin: 0 0 4px; font-size: 24px; }
+  .note { margin: 0 0 24px; color: #555; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .screen { background: #fff; border: 1.5px solid #333; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; min-height: 400px; }
+  .title { padding: 8px 12px; background: #333; color: #fff; font-weight: 600; }
+  .title small { font-weight: 400; color: #ccc; margin-left: 6px; }
+  .body { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .bar { display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid #999; }
+  .row { display: flex; gap: 8px; }
+  .row.wrap { flex-wrap: wrap; }
+  .grow { flex: 1; }
+  .box { border: 1px solid #999; padding: 8px; min-width: 0; }
+  .ph { background: repeating-linear-gradient(45deg, #eee, #eee 6px, #ddd 6px, #ddd 12px); border: 1px solid #999; display: flex; align-items: center; justify-content: center; color: #555; }
+  .btn { display: inline-block; padding: 7px 12px; border: 1.5px solid #333; background: #333; color: #fff; text-align: center; }
+  .btn.alt { background: #fff; color: #333; }
+  .pill { padding: 4px 8px; border: 1px solid #777; }
+  .mono { color: #555; font-size: 12px; }
+  .seats { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+  .seat { aspect-ratio: 1; border: 1px solid #777; }
+  .seat.sold { background: #999; }
+  .seat.pick { background: #333; }
+  .seat.prem { border-width: 2.5px; }
+  .screenbar { text-align: center; padding: 3px; background: #ddd; color: #555; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #999; padding: 5px 6px; text-align: left; }
+  th { background: #eee; }
+  .chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; border-bottom: 1px solid #777; padding: 0 6px; }
+  .chart i { flex: 1; background: #999; }
+</style>
+</head>
+<body>
+<h1>Wireframe ระบบบริหารจัดการโรงภาพยนตร์</h1>
+<p class="note">ภาพร่างโครงหน้าจอหลัก ใช้ดูเนื้อหาและลำดับการทำงาน ยังไม่ใช่งานออกแบบจริง</p>
+<div class="grid">
+
+  <section class="screen">
+    <div class="title">1. หน้าแรก<small>ลูกค้า</small></div>
+    <div class="body">
+      <div class="bar"><b>LOGO</b><span>ค้นหาหนัง…</span><span class="btn alt">เข้าสู่ระบบ</span></div>
+      <div class="row"><span class="pill">กำลังฉาย</span><span class="pill">เร็ว ๆ นี้</span></div>
+      <div class="row wrap">
+        <div class="grow"><div class="ph" style="height:150px">โปสเตอร์</div><b>ชื่อหนัง</b><div class="mono">120 นาที · น 15+</div></div>
+        <div class="grow"><div class="ph" style="height:150px">โปสเตอร์</div><b>ชื่อหนัง</b><div class="mono">98 นาที · ท</div></div>
+        <div class="grow"><div class="ph" style="height:150px">โปสเตอร์</div><b>ชื่อหนัง</b><div class="mono">142 นาที · น 18+</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen">
+    <div class="title">2. รายละเอียดและรอบฉาย<small>ลูกค้า</small></div>
+    <div class="body">
+      <div class="row">
+        <div class="ph" style="width:110px;height:150px">โปสเตอร์</div>
+        <div class="grow"><b>ชื่อหนัง</b><div class="mono">ประเภท · ความยาว · เรตติ้ง</div><p>เรื่องย่อของภาพยนตร์…</p></div>
+      </div>
+      <div class="row"><span class="pill">วันนี้</span><span class="pill">พรุ่งนี้</span><span class="pill">ศ. 6 พ.ย.</span></div>
+      <div class="box"><b>โรง 1</b><div class="row wrap"><span class="pill">10:30</span><span class="pill">13:15</span><span class="pill">16:00</span><span class="pill">19:30</span></div></div>
+      <div class="box"><b>โรง 2</b><div class="row wrap"><span class="pill">11:00</span><span class="pill">14:30</span><span class="pill">20:00</span></div></div>
+    </div>
+  </section>
+
+  <section class="screen">
+    <div class="title">3. เลือกที่นั่ง<small>ลูกค้า / พนักงาน</small></div>
+    <div class="body">
+      <div class="screenbar">จอภาพยนตร์</div>
+      <div class="seats">
+        <i class="seat"></i><i class="seat"></i><i class="seat sold"></i><i class="seat sold"></i><i class="seat"></i><i class="seat"></i><i class="seat"></i><i class="seat"></i>
+        <i class="seat"></i><i class="seat pick"></i><i class="seat pick"></i><i class="seat"></i><i class="seat"></i><i class="seat sold"></i><i class="seat"></i><i class="seat"></i>
+        <i class="seat"></i><i class="seat"></i><i class="seat"></i><i class="seat"></i><i class="seat"></i><i class="seat"></i><i class="seat"></i><i class="seat"></i>
+        <i class="seat prem"></i><i class="seat prem"></i><i class="seat prem"></i><i class="seat prem"></i><i class="seat prem sold"></i><i class="seat prem"></i><i class="seat prem"></i><i class="seat prem"></i>
+      </div>
+      <div class="mono">□ ว่าง  ▩ ขายแล้ว  ■ ที่เลือก  ขอบหนา = พรีเมียม</div>
+      <div class="bar"><span>B2, B3 · 360 บาท</span><span class="btn">ยืนยันที่นั่ง</span></div>
+    </div>
+  </section>
+
+  <section class="screen">
+    <div class="title">4. สรุปและชำระเงิน<small>ลูกค้า</small></div>
+    <div class="body">
+      <div class="bar"><b>เหลือเวลา 09:42</b><span class="mono">ที่นั่งถูกล็อกไว้</span></div>
+      <div class="box">ตั๋ว B2, B3 · 360 บาท<br>ชุดป๊อปคอร์น × 1 · 150 บาท <span class="mono">(แก้ไข)</span></div>
+      <div class="box">ใช้คะแนน: มี 450 คะแนน <span class="pill">-100 คะแนน / -20 บาท</span></div>
+      <div class="row"><span class="pill grow">บัตร</span><span class="pill grow">PromptPay</span></div>
+      <div class="bar"><b>รวม 490 บาท</b><span class="btn">ชำระเงิน</span></div>
+    </div>
+  </section>
+
+  <section class="screen">
+    <div class="title">5. ตั๋วของฉัน<small>ลูกค้า</small></div>
+    <div class="body" style="align-items:center">
+      <b>ชื่อหนัง</b>
+      <div class="mono">โรง 1 · ที่นั่ง B2 · ศ. 6 พ.ย. 19:30</div>
+      <div class="ph" style="width:170px;height:170px">QR ตั๋ว</div>
+      <div class="mono">หมายเลขคำสั่งซื้อ WJ-000123</div>
+      <div class="row"><span class="pill">ตั๋ว 1/2</span><span class="pill">รับสินค้า: แจ้งหมายเลขนี้</span></div>
+    </div>
+  </section>
+
+  <section class="screen">
+    <div class="title">6. POS หน้าร้าน<small>พนักงาน</small></div>
+    <div class="body">
+      <div class="row"><span class="pill">ตั๋ว</span><span class="pill">สินค้า</span><span class="pill">สมาชิก</span></div>
+      <div class="row grow">
+        <div class="grow box"><b>สินค้า</b><div class="row wrap" style="margin-top:8px"><span class="pill">ป๊อปคอร์น S</span><span class="pill">ป๊อปคอร์น L</span><span class="pill">น้ำอัดลม</span><span class="pill">ชุดคู่</span></div></div>
+        <div class="box" style="width:45%"><b>รายการขาย</b><div class="mono">ตั๋ว C4 × 1<br>ชุดคู่ × 1</div><p><b>รวม 330 บาท</b></p><div class="row"><span class="btn grow">เงินสด</span><span class="btn alt grow">PromptPay</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen">
+    <div class="title">7. สแกนตั๋ว<small>พนักงาน</small></div>
+    <div class="body">
+      <div class="ph" style="height:190px">กล้องสแกน QR</div>
+      <div class="box"><b>✓ เข้าชมได้</b><div class="mono">ชื่อหนัง · โรง 1 · ที่นั่ง B2 · 19:30</div></div>
+      <div class="box"><b>✕ ตั๋วนี้ถูกใช้แล้ว</b><div class="mono">สแกนเมื่อ 19:12 น.</div></div>
+      <div class="row"><span class="pill grow">ลงเวลาเข้างาน</span><span class="pill grow">ลงเวลาออกงาน</span></div>
+    </div>
+  </section>
+
+  <section class="screen">
+    <div class="title">8. จัดการรอบฉาย<small>ผู้ดูแลระบบ</small></div>
+    <div class="body">
+      <div class="bar"><span>หลังบ้าน: หนัง · <b>รอบฉาย</b> · โรง · สต็อก · พนักงาน · คำสั่งซื้อ</span></div>
+      <div class="bar"><span>ศ. 6 พ.ย. 2569</span><span class="btn">+ เพิ่มรอบฉาย</span></div>
+      <table>
+        <tr><th>เวลา</th><th>โรง</th><th>หนัง</th><th>ราคา</th><th>ขายแล้ว</th></tr>
+        <tr><td>10:30</td><td>1</td><td>เรื่อง A</td><td>180</td><td>24/120</td></tr>
+        <tr><td>13:15</td><td>1</td><td>เรื่อง B</td><td>180</td><td>58/120</td></tr>
+        <tr><td>11:00</td><td>2</td><td>เรื่อง C</td><td>200</td><td>12/90</td></tr>
+      </table>
+      <div class="mono">แจ้งเตือนทันทีเมื่อเวลารอบฉายชนกันในโรงเดียวกัน</div>
+    </div>
+  </section>
+
+  <section class="screen">
+    <div class="title">9. Dashboard<small>ผู้บริหาร</small></div>
+    <div class="body">
+      <div class="row"><span class="pill">7 วัน</span><span class="pill">30 วัน</span><span class="pill">กำหนดเอง</span></div>
+      <div class="row">
+        <div class="box grow"><div class="mono">ยอดขาย</div><b>฿ —</b></div>
+        <div class="box grow"><div class="mono">ตั๋วที่ขาย</div><b>—</b></div>
+        <div class="box grow"><div class="mono">อัตราเข้าชม</div><b>— %</b></div>
+      </div>
+      <div class="chart"><i style="height:40%"></i><i style="height:65%"></i><i style="height:50%"></i><i style="height:80%"></i><i style="height:55%"></i><i style="height:90%"></i><i style="height:70%"></i></div>
+      <div class="mono">ยอดขายรายวัน</div>
+      <div class="box">อันดับหนังและสินค้าขายดี</div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
