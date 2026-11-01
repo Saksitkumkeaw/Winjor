@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CheckoutPanel } from "@/components/booking/checkout-panel";
+import { PointsRedeem } from "@/components/member/points-redeem";
 import { RoleSection } from "@/components/role-section";
 import { buttonVariants } from "@/components/ui/button";
 import { formatBaht, formatDate, formatTime } from "@/lib/admin/format";
 import { ROLES } from "@/lib/auth/roles";
+import { getCurrentProfile } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "ชำระเงิน" };
@@ -19,7 +21,7 @@ async function Checkout({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_no, status, total, expires_at, tickets(id, price, status, seats(row_label, seat_number), showtimes(starts_at, movies(title), theaters(name))), order_items(id, quantity, unit_price, products(name))",
+      "id, order_no, status, subtotal, discount, points_redeemed, total, expires_at, tickets(id, price, status, seats(row_label, seat_number), showtimes(starts_at, movies(title), theaters(name))), order_items(id, quantity, unit_price, products(name))",
     )
     .eq("id", id)
     .maybeSingle();
@@ -43,6 +45,12 @@ async function Checkout({
 
   const tickets = order.tickets.filter((ticket) => ticket.status === "held");
   const showtime = tickets[0]?.showtimes;
+  const current = await getCurrentProfile();
+  const { data: member } = await supabase
+    .from("profiles")
+    .select("points_balance")
+    .eq("id", current?.id ?? "")
+    .maybeSingle();
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -75,11 +83,25 @@ async function Checkout({
               <span>{formatBaht(item.unit_price * item.quantity)}</span>
             </li>
           ))}
+          {order.discount > 0 ? (
+            <li className="flex justify-between gap-3 p-2">
+              <span>ส่วนลดจากคะแนน</span>
+              <span>-{formatBaht(order.discount)}</span>
+            </li>
+          ) : null}
           <li className="flex justify-between gap-3 p-2 font-semibold">
             <span>รวม</span>
             <span>{formatBaht(order.total)}</span>
           </li>
         </ul>
+        <div className="mt-3">
+          <PointsRedeem
+            orderId={order.id}
+            balance={member?.points_balance ?? 0}
+            redeemed={order.points_redeemed}
+            subtotal={order.subtotal}
+          />
+        </div>
       </section>
       <section>
         <h2 className="mb-3 text-lg font-semibold">ชำระเงิน</h2>

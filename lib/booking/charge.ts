@@ -5,6 +5,7 @@ export type OmiseCharge = {
   status: "pending" | "successful" | "failed" | "expired" | "reversed";
   paid: boolean;
   paid_at: string | null;
+  refundable?: boolean;
   authorize_uri: string | null;
   failure_message: string | null;
   metadata: { order_id?: string };
