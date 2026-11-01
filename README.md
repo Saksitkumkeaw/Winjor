@@ -2,7 +2,46 @@
 
 เว็บแอปสำหรับจัดการโรงภาพยนตร์ ครอบคลุมการจองตั๋วออนไลน์ การขายหน้าร้าน สต็อกสินค้า พนักงาน และรายงานสำหรับผู้บริหาร
 
-> สถานะ: ร่างเฟส 0 เสร็จแล้ว รอทีมตรวจ ยังไม่เริ่มเขียนโค้ด
+> สถานะ: ร่างเฟส 0 เสร็จแล้ว รอทีมตรวจ และวางพื้นฐานเฟส 1 แล้ว (โปรเจกต์, ฐานข้อมูลผู้ใช้, login, 4 บทบาท)
+
+## เริ่มต้นใช้งาน
+
+ต้องมี Node.js 22.12 ขึ้นไป
+
+```bash
+npm install
+```
+
+คัดลอก `.env.example` เป็น `.env.local` แล้วใส่ URL และ publishable key ของ Supabase จากเจ้าของโปรเจกต์
+
+```bash
+npm run dev
+```
+
+เปิด http://localhost:3000
+
+| คำสั่ง | หน้าที่ |
+|---|---|
+| `npm run dev` | รันเว็บสำหรับพัฒนา |
+| `npm test` | รัน unit test |
+| `npm run lint` | ตรวจรูปแบบโค้ด |
+| `npm run build` | build สำหรับใช้งานจริง |
+
+### ตั้งบทบาทผู้ใช้
+
+ผู้ใช้ใหม่เป็น `customer` เสมอ ส่วนการเปลี่ยนบทบาทยังไม่มีหน้าจอจนถึงเฟส 5 ให้รันใน Supabase SQL Editor แล้วเปลี่ยนอีเมลและบทบาทตามต้องการ
+
+```sql
+update public.profiles
+set role = 'admin' -- staff, admin หรือ executive
+where id = (select id from auth.users where email = 'you@example.com');
+```
+
+### ฐานข้อมูล
+
+- Migration อยู่ใน `supabase/migrations`
+- ทดสอบสิทธิ์ด้วยไฟล์ใน `supabase/tests` ซึ่งทำงานใน transaction ที่ rollback
+- หน้าที่จำกัดบทบาทต้องครอบด้วย `RoleSection` และทุกตารางต้องเปิด RLS
 
 ## Use Case Diagram
 
