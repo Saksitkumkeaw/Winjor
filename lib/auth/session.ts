@@ -1,6 +1,5 @@
 import "server-only";
 import { redirect } from "next/navigation";
-import { connection } from "next/server";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_HOME, type Role } from "./roles";
@@ -13,9 +12,6 @@ export type CurrentProfile = {
 
 export const getCurrentProfile = cache(
   async (): Promise<CurrentProfile | null> => {
-    // Supabase อ่าน Date.now() เพื่อตรวจอายุ session จึงต้องหยุด prerender ก่อนถึงจุดนี้
-    await connection();
-
     const supabase = await createClient();
     const {
       data: { user },
