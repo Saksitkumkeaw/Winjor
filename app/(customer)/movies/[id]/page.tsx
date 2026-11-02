@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { PosterViewer } from "@/components/poster-viewer";
 import { SiteHeader } from "@/components/site-header";
 import { buttonVariants } from "@/components/ui/button";
 import { formatDate, formatTime } from "@/lib/admin/format";
@@ -36,13 +36,7 @@ async function MovieDetail({
     <>
       <div className="flex flex-col gap-4 sm:flex-row">
         {movie.poster_url ? (
-          <Image
-            src={movie.poster_url}
-            alt=""
-            width={200}
-            height={280}
-            className="h-auto w-40 rounded-lg object-cover"
-          />
+          <PosterViewer src={movie.poster_url} title={movie.title} />
         ) : (
           <div className="flex h-56 w-40 shrink-0 items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground">
             ไม่มีโปสเตอร์
