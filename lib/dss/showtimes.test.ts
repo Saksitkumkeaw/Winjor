@@ -5,7 +5,7 @@ function movie(title: string, showsPerDay: number, occupancy: number): MovieDema
   return {
     movie_id: title,
     title,
-    showtimes: showsPerDay * 7,
+    showtimes: Math.round(showsPerDay * 7),
     shows_per_day: showsPerDay,
     tickets: 0,
     seats: 0,
@@ -28,6 +28,17 @@ describe("adviseShowtimes", () => {
     expect(medianShows).toBe(2);
     expect(advice.map((row) => row.action)).toEqual(["add", "reduce", "keep", "watch", "normal"]);
     expect(advice[0].trend).toBeCloseTo(0.1, 6);
+  });
+
+  it("ไม่แนะนำหนังที่ฉายน้อยกว่า 3 รอบ และไม่นำมาคิดค่ากลาง", () => {
+    const { medianShows, advice, tooFew } = adviseShowtimes([
+      movie("ฉายรอบเดียว", 0.1, 0),
+      movie("เต็ม", 1, 0.9),
+      movie("ว่าง", 3, 0.1),
+    ]);
+    expect(tooFew.map((row) => row.title)).toEqual(["ฉายรอบเดียว"]);
+    expect(advice.map((row) => row.action)).toEqual(["add", "reduce"]);
+    expect(medianShows).toBe(2);
   });
 
   it("ค่ากลางของจำนวนคู่", () => {

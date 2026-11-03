@@ -3,6 +3,8 @@
 export const HIGH_OCCUPANCY = 0.75;
 export const LOW_OCCUPANCY = 0.3;
 export const DEMAND_PRESETS = [7, 14, 30] as const;
+// รอบน้อยกว่านี้ อัตราเข้าชมยังบอกอะไรไม่ได้
+export const MIN_SHOWTIMES = 3;
 
 export type MovieDemand = {
   movie_id: string;
@@ -43,14 +45,22 @@ function percent(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
 
+function perDay(value: number): string {
+  return `${Number(value.toFixed(1)).toLocaleString("th-TH")} รอบ/วัน`;
+}
+
 // มุมบนซ้าย = เพิ่มรอบ, บนขวา = รักษาไว้, ล่างขวา = ลดรอบ, ล่างซ้าย = เฝ้าดู
 export function adviseShowtimes(rows: MovieDemand[]): {
   medianShows: number;
   advice: ShowtimeAdvice[];
+  // หนังที่ฉายน้อยกว่า MIN_SHOWTIMES รอบ ไม่นำมาแนะนำ
+  tooFew: MovieDemand[];
 } {
-  const medianShows = median(rows.map((row) => row.shows_per_day));
+  const enough = rows.filter((row) => row.showtimes >= MIN_SHOWTIMES);
+  const tooFew = rows.filter((row) => row.showtimes < MIN_SHOWTIMES);
+  const medianShows = median(enough.map((row) => row.shows_per_day));
 
-  const advice = rows.map((row) => {
+  const advice = enough.map((row) => {
     const occupancy = row.occupancy ?? 0;
     const fewShows = row.shows_per_day < medianShows;
     const trend =
@@ -63,17 +73,17 @@ export function adviseShowtimes(rows: MovieDemand[]): {
     if (occupancy >= HIGH_OCCUPANCY) action = fewShows ? "add" : "keep";
     else if (occupancy < LOW_OCCUPANCY) action = fewShows ? "watch" : "reduce";
 
-    const detail = `เข้าชม ${percent(occupancy)} จาก ${row.shows_per_day.toFixed(1)} รอบต่อวัน`;
+    const shows = perDay(row.shows_per_day);
     const reason = {
-      add: `${detail} น้อยกว่าค่ากลาง ${medianShows.toFixed(1)} รอบ และขายหมด ${percent(soldOut)} ของรอบ`,
-      keep: `${detail} รอบมากอยู่แล้วแต่ยังเต็ม`,
-      reduce: `${detail} รอบมากแต่ที่นั่งว่างเกิน ${percent(1 - LOW_OCCUPANCY)}`,
-      watch: `${detail} รอบน้อยและคนดูน้อย ดูแนวโน้มก่อนตัดสินใจ`,
-      normal: `${detail} อยู่ในช่วงปกติ`,
+      add: `มีแค่ ${shows} แต่คนดู ${percent(occupancy)} และขายหมด ${percent(soldOut)} ของรอบ`,
+      keep: `มี ${shows} และยังคนดู ${percent(occupancy)}`,
+      reduce: `มี ${shows} แต่คนดูแค่ ${percent(occupancy)}`,
+      watch: `รอบน้อย (${shows}) และคนดูน้อย (${percent(occupancy)}) รอดูก่อน`,
+      normal: `มี ${shows} คนดู ${percent(occupancy)}`,
     }[action];
 
     return { ...row, action, trend, reason };
   });
 
-  return { medianShows, advice };
+  return { medianShows, advice, tooFew };
 }

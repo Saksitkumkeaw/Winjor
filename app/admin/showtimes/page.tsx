@@ -55,7 +55,7 @@ async function Showtimes({
         .order("name"),
       loadShowtimeDemand(supabase, demandDays),
     ]);
-  const { advice, medianShows } = adviseShowtimes(demandRows ?? []);
+  const { advice, medianShows, tooFew } = adviseShowtimes(demandRows ?? []);
   const movieId =
     typeof movie === "string" && movies?.some((item) => item.id === movie)
       ? movie
@@ -82,6 +82,7 @@ async function Showtimes({
       <ShowtimeDemand
         advice={advice}
         medianShows={medianShows}
+        tooFew={tooFew}
         days={demandDays}
         presets={
           <PresetLinks
