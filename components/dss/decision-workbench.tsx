@@ -260,25 +260,30 @@ export function DecisionWorkbench({
         )}
 
         {!plan.missingCost && plan.d > 0 ? (
-          <div className="mt-3 rounded-lg border p-3 font-mono text-sm leading-7">
-            <div>
-              d = {number(plan.d)} {unit}/วัน, σ = {number(plan.sigma)}, D = d × {DAYS_PER_YEAR} ={" "}
-              {number(plan.annualDemand, 0)}, H = C × I = {number(ingredient.unit_cost, 4)} ×{" "}
-              {number(ingredient.holding_rate, 4)} = {number(plan.holdingCost, 4)} บาท/หน่วย/ปี
+          <details className="mt-3 rounded-lg border p-3 text-sm">
+            <summary className="cursor-pointer font-medium">
+              ดูสูตรและการแทนค่า (Q*, SS, ROP)
+            </summary>
+            <div className="mt-2 font-mono leading-7">
+              <div>
+                d = {number(plan.d)} {unit}/วัน, σ = {number(plan.sigma)}, D = d × {DAYS_PER_YEAR} ={" "}
+                {number(plan.annualDemand, 0)}, H = C × I = {number(ingredient.unit_cost, 4)} ×{" "}
+                {number(ingredient.holding_rate, 4)} = {number(plan.holdingCost, 4)} บาท/หน่วย/ปี
+              </div>
+              <div>
+                Q* = √(2FD/H) = √(2 × {number(orderCost)} × {number(plan.annualDemand, 0)} ÷{" "}
+                {number(plan.holdingCost, 4)}) = <strong>{formatQty(plan.eoq, unit)}</strong>
+              </div>
+              <div>
+                SS = z × σ × √L = {plan.z} × {number(plan.sigma)} × √{leadTime} ={" "}
+                <strong>{formatQty(plan.safetyStock, unit)}</strong>
+              </div>
+              <div>
+                ROP = d × L + SS = {number(plan.d)} × {leadTime} + {number(plan.safetyStock)} ={" "}
+                <strong>{formatQty(plan.reorderPoint, unit)}</strong>
+              </div>
             </div>
-            <div>
-              Q* = √(2FD/H) = √(2 × {number(orderCost)} × {number(plan.annualDemand, 0)} ÷{" "}
-              {number(plan.holdingCost, 4)}) = <strong>{formatQty(plan.eoq, unit)}</strong>
-            </div>
-            <div>
-              SS = z × σ × √L = {plan.z} × {number(plan.sigma)} × √{leadTime} ={" "}
-              <strong>{formatQty(plan.safetyStock, unit)}</strong>
-            </div>
-            <div>
-              ROP = d × L + SS = {number(plan.d)} × {leadTime} + {number(plan.safetyStock)} ={" "}
-              <strong>{formatQty(plan.reorderPoint, unit)}</strong>
-            </div>
-          </div>
+          </details>
         ) : null}
       </section>
 
