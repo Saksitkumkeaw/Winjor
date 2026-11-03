@@ -2,6 +2,7 @@
 -- ลำดับ: รัน dss_ingredient_costs.sql ก่อน แล้วรันไฟล์นี้ ลบทั้งชุดได้ด้วย dss_demo_remove.sql
 -- ระบุข้อมูลจำลองได้ทุกแถว: คำสั่งซื้อขึ้นต้นด้วย DEMO- (ตั๋ว รายการสินค้า และการตัดสต็อกผูกกับคำสั่งซื้อเหล่านี้)
 -- ส่วนรอบฉายจดไว้ใน private.dss_demo_rows
+-- มีทั้งรอบที่ฉายแล้ว 90 วัน และการจองล่วงหน้าของรอบที่ยังไม่ฉาย
 -- ยอดย้อนหลังไม่เปลี่ยน quantity_on_hand ขั้นตอนสุดท้ายตั้งค่าคงเหลือสำหรับสาธิตแยกต่างหาก และจดค่าเดิมไว้
 
 begin;
@@ -337,6 +338,151 @@ set quantity_on_hand = targets.demo_on_hand,
     reorder_level = targets.legacy_level
 from targets
 where ingredient.id = targets.id;
+
+-- การจองล่วงหน้าของรอบที่ยังไม่ฉาย ใช้อัตราเข้าชม 14 วันล่าสุดของแต่ละเรื่อง
+-- รอบที่ใกล้ฉายขายไปมากกว่ารอบที่อีกหลายวันจึงจะฉาย และไม่มีป๊อปคอร์นเพื่อไม่ให้ยอดใช้วัตถุดิบเปลี่ยน
+create function private.dss_demo_book_upcoming()
+returns integer
+language plpgsql
+set search_path = ''
+as $
+declare
+  today date := (now() at time zone 'Asia/Bangkok')::date;
+  upcoming record;
+  base numeric;
+  final_share numeric;
+  booked_share numeric;
+  sold integer;
+  seat_list uuid[];
+  seat_index integer;
+  group_size integer;
+  channel public.order_channel;
+  created timestamptz;
+  new_order uuid;
+  orders_created integer := 0;
+begin
+  for upcoming in
+    select
+      showtime.id,
+      showtime.movie_id,
+      showtime.theater_id,
+      showtime.starts_at,
+      showtime.base_price,
+      showtime.created_at,
+      (showtime.starts_at at time zone 'Asia/Bangkok')::date - today as days_ahead,
+      extract(hour from showtime.starts_at at time zone 'Asia/Bangkok') as start_hour,
+      extract(isodow from showtime.starts_at at time zone 'Asia/Bangkok') as weekday
+    from public.showtimes as showtime
+    where showtime.status = 'scheduled'
+      and showtime.starts_at > now()
+    order by showtime.starts_at
+  loop
+    -- อัตราเข้าชมของเรื่องนี้ใน 14 วันที่ผ่านมา ถ้าไม่มีข้อมูลใช้ 15%
+    select coalesce(sum(past_sold.count)::numeric / nullif(sum(past_capacity.count), 0), 0.15)
+    into base
+    from public.showtimes as past
+    cross join lateral (
+      select count(*) from public.tickets as ticket
+      where ticket.showtime_id = past.id and ticket.status in ('paid', 'used')
+    ) as past_sold
+    cross join lateral (
+      select count(*) from public.seats as seat
+      where seat.theater_id = past.theater_id and seat.is_active
+    ) as past_capacity
+    where past.movie_id = upcoming.movie_id
+      and past.status = 'scheduled'
+      and past.starts_at >= now() - interval '14 days'
+      and past.starts_at <= now();
+
+    final_share := least(
+      1,
+      base
+        * case when upcoming.start_hour < 13 then 0.75 when upcoming.start_hour < 16 then 0.9 when upcoming.start_hour < 19 then 1.1 else 1.2 end
+        * case upcoming.weekday when 5 then 1.3 when 6 then 1.5 when 7 then 1.4 else 1.0 end
+        * (0.85 + random() * 0.3)
+    );
+    booked_share := case
+      when upcoming.days_ahead <= 0 then 0.75
+      when upcoming.days_ahead = 1 then 0.45
+      when upcoming.days_ahead = 2 then 0.3
+      when upcoming.days_ahead = 3 then 0.2
+      else 0.1
+    end;
+
+    seat_list := array(
+      select seat.id
+      from public.seats as seat
+      where seat.theater_id = upcoming.theater_id
+        and seat.is_active
+        and not exists (
+          select 1 from public.tickets as ticket
+          where ticket.showtime_id = upcoming.id
+            and ticket.seat_id = seat.id
+            and ticket.status in ('held', 'paid', 'used')
+        )
+      order by random()
+    );
+    sold := least(
+      coalesce(array_length(seat_list, 1), 0),
+      round(coalesce(array_length(seat_list, 1), 0) * final_share * booked_share)::integer
+    );
+
+    seat_index := 1;
+    while seat_index <= sold loop
+      group_size := least(sold - seat_index + 1, 1 + floor(random() * 4)::integer);
+      -- จองล่วงหน้าส่วนใหญ่ซื้อออนไลน์ หน้าร้านขายได้เฉพาะวันที่ฉาย
+      channel := case when upcoming.days_ahead <= 0 and random() < 0.4 then 'pos' else 'online' end;
+      created := greatest(upcoming.created_at, now() - random() * interval '3 days');
+
+      insert into public.orders (order_no, channel, status, subtotal, total, expires_at, created_at)
+      values (
+        'DEMO-' || lpad(nextval('private.dss_demo_order_seq')::text, 6, '0'),
+        channel,
+        'paid',
+        0,
+        0,
+        created + interval '10 minutes',
+        created
+      )
+      returning id into new_order;
+
+      insert into public.tickets (order_id, showtime_id, seat_id, price, status, qr_token, created_at)
+      select
+        new_order,
+        upcoming.id,
+        seat.id,
+        upcoming.base_price + seat_type.surcharge,
+        'paid',
+        encode(extensions.gen_random_bytes(16), 'hex'),
+        created
+      from unnest(seat_list[seat_index:seat_index + group_size - 1]) as picked (seat_id)
+      join public.seats as seat on seat.id = picked.seat_id
+      join public.seat_types as seat_type on seat_type.id = seat.seat_type_id;
+
+      update public.orders
+      set subtotal = totals.amount,
+          total = totals.amount
+      from (
+        select coalesce(sum(price), 0) as amount
+        from public.tickets
+        where order_id = new_order
+      ) as totals
+      where id = new_order;
+
+      orders_created := orders_created + 1;
+      seat_index := seat_index + group_size;
+    end loop;
+  end loop;
+
+  return orders_created;
+end;
+$;
+
+alter table public.tickets disable trigger tickets_broadcast_seat_change;
+select private.dss_demo_book_upcoming() as upcoming_orders;
+alter table public.tickets enable trigger tickets_broadcast_seat_change;
+
+drop function private.dss_demo_book_upcoming();
 
 drop function private.dss_demo_generate(integer, integer);
 drop table private.dss_demo_movies;
