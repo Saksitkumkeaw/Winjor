@@ -41,6 +41,14 @@ describe("adviseShowtimes", () => {
     expect(medianShows).toBe(2);
   });
 
+  it("แนะนำให้ออกโรงเมื่อคนดูต่ำกว่า 10% และไม่ดีขึ้น", () => {
+    const fading = { ...movie("คนหาย", 4, 0.05), previous_occupancy: 0.07 };
+    const fresh = { ...movie("เพิ่งเข้า", 4, 0.05), previous_occupancy: null };
+    const recovering = { ...movie("กำลังดีขึ้น", 4, 0.08), previous_occupancy: 0.04 };
+    const { advice } = adviseShowtimes([fading, fresh, recovering, movie("ปกติ", 2, 0.5)]);
+    expect(advice.map((row) => row.action)).toEqual(["end", "reduce", "reduce", "normal"]);
+  });
+
   it("ค่ากลางของจำนวนคู่", () => {
     expect(median([4, 1, 3, 2])).toBe(2.5);
     expect(median([])).toBe(0);

@@ -59,7 +59,14 @@ async function Showtimes({
         .order("name"),
       loadShowtimeDemand(supabase, demandDays),
     ]);
-  const { advice, medianShows, tooFew } = adviseShowtimes(demandRows ?? []);
+  // หนังที่ออกโรงแล้วไม่นำมาแนะนำ แต่บอกไว้ว่าออกไปแล้ว
+  const activeIds = new Set(movies?.map((item) => item.id));
+  const { advice, medianShows, tooFew } = adviseShowtimes(
+    (demandRows ?? []).filter((row) => activeIds.has(row.movie_id)),
+  );
+  const ended = (demandRows ?? [])
+    .filter((row) => !activeIds.has(row.movie_id))
+    .map((row) => row.title);
   const movieId =
     typeof movie === "string" && movies?.some((item) => item.id === movie)
       ? movie
@@ -93,6 +100,7 @@ async function Showtimes({
         tooFew={tooFew}
         days={demandDays}
         params={params}
+        ended={ended}
         selected={
           movieId && selectedShowtimes
             ? { movieId, showtimes: selectedShowtimes }

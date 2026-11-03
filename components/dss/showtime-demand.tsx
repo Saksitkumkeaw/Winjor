@@ -6,6 +6,7 @@ import { formatDate, formatTime } from "@/lib/admin/format";
 import type { MovieShowtime } from "@/lib/dss/queries";
 import {
   ACTION_LABEL,
+  END_OCCUPANCY,
   HIGH_OCCUPANCY,
   LOW_OCCUPANCY,
   MIN_SHOWTIMES,
@@ -14,10 +15,12 @@ import {
   type ShowtimeAdvice,
 } from "@/lib/dss/showtimes";
 import { cn } from "@/lib/utils";
+import { EndMovieButton } from "./end-movie-button";
 import { formatPercent } from "./parts";
 
 const ACTION_STYLE: Record<ShowtimeAction, { bar: string; badge: string }> = {
   add: { bar: "bg-emerald-600", badge: "bg-emerald-50 text-emerald-800 ring-emerald-600/30" },
+  end: { bar: "bg-red-900", badge: "bg-red-900 text-white ring-red-900" },
   keep: { bar: "bg-sky-600", badge: "bg-sky-50 text-sky-800 ring-sky-600/30" },
   reduce: { bar: "bg-red-600", badge: "bg-red-50 text-red-800 ring-red-600/30" },
   watch: { bar: "bg-amber-500", badge: "bg-amber-50 text-amber-900 ring-amber-600/30" },
@@ -25,7 +28,14 @@ const ACTION_STYLE: Record<ShowtimeAction, { bar: string; badge: string }> = {
 };
 
 // เรื่องที่ต้องทำอะไรสักอย่างอยู่ด้านบน
-const PRIORITY: Record<ShowtimeAction, number> = { add: 0, reduce: 1, watch: 2, keep: 3, normal: 4 };
+const PRIORITY: Record<ShowtimeAction, number> = {
+  add: 0,
+  end: 1,
+  reduce: 2,
+  watch: 3,
+  keep: 4,
+  normal: 5,
+};
 
 export function ActionBadge({ action }: { action: ShowtimeAction }) {
   return (
@@ -77,10 +87,18 @@ function UpcomingShowtimes({
         <span className="font-medium">
           รอบที่จะถึงของ {row.title} {showtimes.length} รอบ
         </span>
-        <Link href={createHref} className={buttonVariants({ size: "sm" })}>
-          เพิ่มรอบ
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href={createHref} className={buttonVariants({ size: "sm" })}>
+            เพิ่มรอบ
+          </Link>
+          <EndMovieButton movieId={row.movie_id} title={row.title} upcoming={showtimes.length} />
+        </div>
       </div>
+      {row.action === "end" ? (
+        <p className="mb-2 text-xs text-red-800">
+          แนะนำให้ออกโรง เมื่อกดปุ่ม ให้ออกโรง รอบที่ยังไม่มีคนจองจะถูกยกเลิกให้ทั้งหมด
+        </p>
+      ) : null}
       {row.action === "reduce" ? (
         <p className="mb-2 text-xs text-red-800">
           ควรยกเลิกรอบที่ยังขายได้น้อย รอบที่มีคนจองแล้วระบบจะคืนเงินให้อัตโนมัติ
@@ -194,6 +212,9 @@ function DemandRow({
               สร้างรอบ
             </Link>
           ) : null}
+          {row.action === "end" && !open ? (
+            <EndMovieButton movieId={row.movie_id} title={row.title} upcoming={null} />
+          ) : null}
           {!open ? (
             <Link href={toggleHref} scroll={false} className="text-foreground underline">
               ดูรอบที่จะถึง
@@ -214,6 +235,7 @@ export function ShowtimeDemand({
   presets,
   params,
   selected,
+  ended,
 }: {
   advice: ShowtimeAdvice[];
   medianShows: number;
@@ -223,11 +245,13 @@ export function ShowtimeDemand({
   // ค่าใน URL ที่ต้องคงไว้เมื่อกดเปิดหรือปิดรอบของหนัง
   params: Record<string, string>;
   selected?: { movieId: string; showtimes: MovieShowtime[] };
+  // ชื่อหนังที่ออกโรงแล้ว ไม่นำมาแนะนำ
+  ended: string[];
 }) {
   const sorted = [...advice].sort(
     (a, b) => PRIORITY[a.action] - PRIORITY[b.action] || (b.occupancy ?? 0) - (a.occupancy ?? 0),
   );
-  const counts = (["add", "reduce", "watch"] as const)
+  const counts = (["add", "end", "reduce", "watch"] as const)
     .map((action) => ({ action, count: advice.filter((row) => row.action === action).length }))
     .filter((item) => item.count > 0);
 
@@ -267,6 +291,7 @@ export function ShowtimeDemand({
               <span aria-hidden className="h-3 border-l-2 border-dashed border-red-700" />
               ต่ำกว่า {LOW_OCCUPANCY * 100}% = ว่าง
             </span>
+            <span>ต่ำกว่า {END_OCCUPANCY * 100}% และไม่ดีขึ้น = ควรออกโรง</span>
             <span>
               รอบน้อย/เยอะ เทียบค่ากลาง {Number(medianShows.toFixed(1)).toLocaleString("th-TH")}{" "}
               รอบ/วัน
@@ -288,6 +313,9 @@ export function ShowtimeDemand({
             <p className="mt-2 text-xs text-muted-foreground">
               ฉายไม่ถึง {MIN_SHOWTIMES} รอบ ยังไม่แนะนำ: {tooFew.map((row) => row.title).join(", ")}
             </p>
+          ) : null}
+          {ended.length ? (
+            <p className="mt-1 text-xs text-muted-foreground">ออกโรงแล้ว: {ended.join(", ")}</p>
           ) : null}
         </>
       ) : (

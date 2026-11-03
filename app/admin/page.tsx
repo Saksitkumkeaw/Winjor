@@ -73,7 +73,8 @@ async function Overview() {
   const supabase = await createClient();
   const today = toBangkokIso(bangkokDate(new Date()), "00:00");
 
-  const [movies, theaters, showtimes, summary, plans, demand, weekDemand] = await Promise.all([
+  const [movies, theaters, showtimes, summary, plans, demand, weekDemand, activeMovies] =
+    await Promise.all([
     supabase
       .from("movies")
       .select("id", { count: "exact", head: true })
@@ -91,6 +92,7 @@ async function Overview() {
     loadIngredientPlans(supabase, { lookback: 30, serviceLevel: 95 }),
     loadShowtimeDemand(supabase, 14),
     loadShowtimeDemand(supabase, 7),
+    supabase.from("movies").select("id").neq("status", "ended"),
   ]);
 
   const stats = [
@@ -100,9 +102,13 @@ async function Overview() {
   ];
 
   const toOrder = plans?.plans.filter((row) => row.plan.status === "order") ?? [];
-  const { advice } = adviseShowtimes(demand ?? []);
+  // หนังที่ออกโรงแล้วไม่ต้องตัดสินใจอีก
+  const activeIds = new Set(activeMovies.data?.map((movie) => movie.id));
+  const { advice } = adviseShowtimes(
+    (demand ?? []).filter((row) => activeIds.has(row.movie_id)),
+  );
   const addMore = advice.filter((row) => row.action === "add");
-  const reduce = advice.filter((row) => row.action === "reduce");
+  const reduce = advice.filter((row) => row.action === "end" || row.action === "reduce");
   const day = summary.data as unknown as TodaySummary | null;
   const occupancy =
     day && day.seats_available ? day.seats_sold / day.seats_available : null;
@@ -110,7 +116,7 @@ async function Overview() {
     day && day.revenue_yesterday > 0
       ? (day.revenue_today - day.revenue_yesterday) / day.revenue_yesterday
       : null;
-  const weekMovies = [...(weekDemand ?? [])].sort(
+  const weekMovies = (weekDemand ?? []).filter((row) => activeIds.has(row.movie_id)).sort(
     (a, b) => (b.occupancy ?? 0) - (a.occupancy ?? 0),
   );
 
@@ -147,18 +153,21 @@ async function Overview() {
           }))}
         />
         <DecisionCard
-          title="หนังที่ควรลดรอบ"
+          title="หนังที่ควรลดรอบหรือออกโรง"
           href="/admin/showtimes"
           empty="ยังไม่มีเรื่องที่รอบเยอะแต่ว่าง"
           items={reduce.map((row) => ({
             key: row.movie_id,
             label: row.title,
-            href: "/admin/showtimes",
-            detail: (
-              <span className="text-xs text-muted-foreground">
-                เข้าชม {formatPercent(row.occupancy)}
-              </span>
-            ),
+            href: `/admin/showtimes?movie=${row.movie_id}`,
+            detail:
+              row.action === "end" ? (
+                <ActionBadge action="end" />
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  เข้าชม {formatPercent(row.occupancy)}
+                </span>
+              ),
           }))}
         />
       </div>

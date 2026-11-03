@@ -2,6 +2,8 @@
 
 export const HIGH_OCCUPANCY = 0.75;
 export const LOW_OCCUPANCY = 0.3;
+// คนดูต่ำกว่านี้และไม่ดีขึ้นจากช่วงก่อน ควรให้ออกโรง
+export const END_OCCUPANCY = 0.1;
 export const DEMAND_PRESETS = [7, 14, 30] as const;
 // รอบน้อยกว่านี้ อัตราเข้าชมยังบอกอะไรไม่ได้
 export const MIN_SHOWTIMES = 3;
@@ -18,10 +20,11 @@ export type MovieDemand = {
   previous_occupancy: number | null;
 };
 
-export type ShowtimeAction = "add" | "keep" | "reduce" | "watch" | "normal";
+export type ShowtimeAction = "add" | "end" | "keep" | "reduce" | "watch" | "normal";
 
 export const ACTION_LABEL: Record<ShowtimeAction, string> = {
   add: "เพิ่มรอบ",
+  end: "ออกโรง",
   keep: "รักษาไว้",
   reduce: "ลดรอบ",
   watch: "เฝ้าดู",
@@ -71,11 +74,14 @@ export function adviseShowtimes(rows: MovieDemand[]): {
 
     let action: ShowtimeAction = "normal";
     if (occupancy >= HIGH_OCCUPANCY) action = fewShows ? "add" : "keep";
+    // หนังใหม่ที่ยังไม่มีช่วงก่อนให้เทียบ จะไม่ถูกแนะนำให้ออกโรง
+    else if (occupancy < END_OCCUPANCY && trend !== null && trend <= 0) action = "end";
     else if (occupancy < LOW_OCCUPANCY) action = fewShows ? "watch" : "reduce";
 
     const shows = perDay(row.shows_per_day);
     const reason = {
       add: `มีแค่ ${shows} แต่คนดู ${percent(occupancy)} และขายหมด ${percent(soldOut)} ของรอบ`,
+      end: `คนดูแค่ ${percent(occupancy)} และไม่ดีขึ้นจากช่วงก่อน ถึงลดรอบก็ไม่คุ้ม`,
       keep: `มี ${shows} และยังคนดู ${percent(occupancy)}`,
       reduce: `มี ${shows} แต่คนดูแค่ ${percent(occupancy)}`,
       watch: `รอบน้อย (${shows}) และคนดูน้อย (${percent(occupancy)}) รอดูก่อน`,

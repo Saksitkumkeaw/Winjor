@@ -318,6 +318,68 @@ export async function adjustStock(
   return { notice: "บันทึกสต็อกแล้ว" };
 }
 
+// ให้หนังออกโรง: ซ่อนจากหน้าลูกค้า ยกเลิกรอบที่ยังไม่มีคนจอง ส่วนรอบที่มีคนจองแล้วยังฉายตามเดิม
+export async function endMovieRun(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const movieId = String(formData.get("movie_id") ?? "");
+  if (!movieId) return { error: "ไม่พบหนัง" };
+
+  const supabase = await adminClient();
+  const { data: upcoming, error: loadError } = await supabase
+    .from("showtimes")
+    .select("id, tickets(status)")
+    .eq("movie_id", movieId)
+    .eq("status", "scheduled")
+    .gt("starts_at", new Date().toISOString());
+  if (loadError) return { error: "โหลดรอบฉายไม่สำเร็จ" };
+
+  const { error } = await supabase
+    .from("movies")
+    .update({ status: "ended" })
+    .eq("id", movieId);
+  if (error) return { error: "ให้หนังออกโรงไม่สำเร็จ" };
+
+  const empty = upcoming.filter(
+    (showtime) =>
+      !showtime.tickets.some((ticket) =>
+        ["held", "paid", "used"].includes(ticket.status),
+      ),
+  );
+  let failed = 0;
+  for (const showtime of empty) {
+    const { data: paidOrders, error: cancelError } = await supabase.rpc(
+      "cancel_showtime",
+      { p_showtime_id: showtime.id },
+    );
+    if (cancelError) {
+      failed += 1;
+      continue;
+    }
+    // มีคนจ่ายเงินเข้ามาระหว่างตรวจ ต้องคืนเงินเหมือนการยกเลิกรอบปกติ
+    for (const orderId of paidOrders ?? []) {
+      if (await refundPaidOrder(orderId, "ยกเลิกรอบฉาย")) failed += 1;
+    }
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/showtimes");
+  revalidatePath("/admin/movies");
+  revalidatePath("/");
+
+  const kept = upcoming.length - empty.length;
+  return {
+    notice: [
+      `ให้ออกโรงแล้ว หน้าเว็บลูกค้าจะไม่แสดงเรื่องนี้ ยกเลิก ${empty.length - failed} รอบที่ยังไม่มีคนจอง`,
+      kept ? `เหลือ ${kept} รอบที่มีคนจองแล้ว จะฉายตามเดิม` : "",
+      failed ? `มี ${failed} รายการที่ไม่สำเร็จ ตรวจที่หน้าคำสั่งซื้อ` : "",
+    ]
+      .filter(Boolean)
+      .join(" · "),
+  };
+}
+
 export async function cancelShowtime(formData: FormData) {
   const supabase = await adminClient();
   const { data: paidOrders, error } = await supabase.rpc("cancel_showtime", {
