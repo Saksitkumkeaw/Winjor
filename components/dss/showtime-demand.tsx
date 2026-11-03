@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cancelShowtime } from "@/lib/admin/actions";
+import { formatDate, formatTime } from "@/lib/admin/format";
+import type { MovieShowtime } from "@/lib/dss/queries";
 import {
   ACTION_LABEL,
   HIGH_OCCUPANCY,
@@ -58,14 +61,115 @@ function Marker({ value, className }: { value: number; className: string }) {
   );
 }
 
+// รอบที่ยังไม่ฉายของเรื่องที่เลือก เพิ่มหรือยกเลิกได้จากตรงนี้
+function UpcomingShowtimes({
+  row,
+  showtimes,
+  createHref,
+}: {
+  row: ShowtimeAdvice;
+  showtimes: MovieShowtime[];
+  createHref: string;
+}) {
+  return (
+    <div className="mt-2 rounded-lg border bg-muted/30 p-3 sm:col-span-2">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <span className="font-medium">
+          รอบที่จะถึงของ {row.title} {showtimes.length} รอบ
+        </span>
+        <Link href={createHref} className={buttonVariants({ size: "sm" })}>
+          เพิ่มรอบ
+        </Link>
+      </div>
+      {row.action === "reduce" ? (
+        <p className="mb-2 text-xs text-red-800">
+          ควรยกเลิกรอบที่ยังขายได้น้อย รอบที่มีคนจองแล้วระบบจะคืนเงินให้อัตโนมัติ
+        </p>
+      ) : null}
+      {showtimes.length ? (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-md">
+            <thead className="text-left text-xs text-muted-foreground">
+              <tr>
+                <th className="p-1.5 font-medium">วัน เวลา</th>
+                <th className="p-1.5 font-medium">โรง</th>
+                <th className="p-1.5 font-medium">ขายแล้ว</th>
+                <th className="p-1.5 font-medium">
+                  <span className="sr-only">จัดการ</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {showtimes.map((showtime) => {
+                const share = showtime.capacity ? showtime.sold / showtime.capacity : 0;
+                return (
+                  <tr key={showtime.id} className="border-t">
+                    <td className="p-1.5 whitespace-nowrap">
+                      {formatDate(showtime.starts_at)} {formatTime(showtime.starts_at)}
+                    </td>
+                    <td className="p-1.5">{showtime.theater}</td>
+                    <td className="p-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-20 rounded-sm bg-muted">
+                          <div
+                            className="h-full rounded-sm bg-sky-600"
+                            style={{ width: `${Math.min(share, 1) * 100}%` }}
+                          />
+                        </div>
+                        <span className="whitespace-nowrap tabular-nums">
+                          {showtime.sold}/{showtime.capacity}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-1.5 text-right">
+                      <form action={cancelShowtime}>
+                        <input type="hidden" name="id" value={showtime.id} />
+                        <Button type="submit" variant="outline" size="sm">
+                          {showtime.sold ? `ยกเลิก (คืนเงิน ${showtime.sold} ที่)` : "ยกเลิก"}
+                        </Button>
+                      </form>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="text-muted-foreground">ยังไม่มีรอบที่จะถึง</p>
+      )}
+    </div>
+  );
+}
+
 // แท่งยาว = คนดูมาก แท่งเลยเส้นเขียว = เต็ม ไม่ถึงเส้นแดง = ว่าง
-function DemandRow({ row, days }: { row: ShowtimeAdvice; days: number }) {
+function DemandRow({
+  row,
+  params,
+  showtimes,
+}: {
+  row: ShowtimeAdvice;
+  params: Record<string, string>;
+  showtimes: MovieShowtime[] | null;
+}) {
   const occupancy = Math.min(row.occupancy ?? 0, 1);
+  const open = showtimes !== null;
+  const toggleHref = `?${new URLSearchParams(
+    open ? params : { ...params, movie: row.movie_id },
+  )}`;
+  const createHref = `?${new URLSearchParams({ ...params, movie: row.movie_id })}#new-showtime`;
 
   return (
     <li className="grid gap-x-4 gap-y-1 py-3 sm:grid-cols-[12rem_1fr]">
       <div className="flex items-center justify-between gap-2 sm:flex-col sm:items-start sm:justify-start">
-        <span className="min-w-0 truncate font-medium">{row.title}</span>
+        <Link
+          href={toggleHref}
+          scroll={false}
+          aria-expanded={open}
+          className="min-w-0 truncate font-medium hover:underline"
+        >
+          {open ? "▾" : "▸"} {row.title}
+        </Link>
         <ActionBadge action={row.action} />
       </div>
       <div>
@@ -85,16 +189,19 @@ function DemandRow({ row, days }: { row: ShowtimeAdvice; days: number }) {
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">
           <span>{row.reason}</span>
           <Trend value={row.trend} />
-          {row.action === "add" ? (
-            <Link
-              href={`?movie=${row.movie_id}&demand=${days}#new-showtime`}
-              className={buttonVariants({ size: "sm" })}
-            >
+          {row.action === "add" && !open ? (
+            <Link href={createHref} className={buttonVariants({ size: "sm" })}>
               สร้างรอบ
+            </Link>
+          ) : null}
+          {!open ? (
+            <Link href={toggleHref} scroll={false} className="text-foreground underline">
+              ดูรอบที่จะถึง
             </Link>
           ) : null}
         </div>
       </div>
+      {open ? <UpcomingShowtimes row={row} showtimes={showtimes} createHref={createHref} /> : null}
     </li>
   );
 }
@@ -105,12 +212,17 @@ export function ShowtimeDemand({
   tooFew,
   days,
   presets,
+  params,
+  selected,
 }: {
   advice: ShowtimeAdvice[];
   medianShows: number;
   tooFew: MovieDemand[];
   days: number;
   presets: ReactNode;
+  // ค่าใน URL ที่ต้องคงไว้เมื่อกดเปิดหรือปิดรอบของหนัง
+  params: Record<string, string>;
+  selected?: { movieId: string; showtimes: MovieShowtime[] };
 }) {
   const sorted = [...advice].sort(
     (a, b) => PRIORITY[a.action] - PRIORITY[b.action] || (b.occupancy ?? 0) - (a.occupancy ?? 0),
@@ -163,7 +275,12 @@ export function ShowtimeDemand({
 
           <ul className="mt-1 divide-y text-sm">
             {sorted.map((row) => (
-              <DemandRow key={row.movie_id} row={row} days={days} />
+              <DemandRow
+                key={row.movie_id}
+                row={row}
+                params={params}
+                showtimes={selected?.movieId === row.movie_id ? selected.showtimes : null}
+              />
             ))}
           </ul>
 

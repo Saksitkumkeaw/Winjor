@@ -13,7 +13,11 @@ import {
   nextDate,
   toBangkokIso,
 } from "@/lib/admin/format";
-import { loadShowtimeDemand, parseDemandDays } from "@/lib/dss/queries";
+import {
+  loadMovieShowtimes,
+  loadShowtimeDemand,
+  parseDemandDays,
+} from "@/lib/dss/queries";
 import { adviseShowtimes, DEMAND_PRESETS } from "@/lib/dss/showtimes";
 import { createClient } from "@/lib/supabase/server";
 
@@ -60,6 +64,10 @@ async function Showtimes({
     typeof movie === "string" && movies?.some((item) => item.id === movie)
       ? movie
       : undefined;
+  const selectedShowtimes = movieId
+    ? await loadMovieShowtimes(supabase, movieId)
+    : null;
+  const params = { date, demand: String(demandDays) };
 
   return (
     <>
@@ -84,6 +92,12 @@ async function Showtimes({
         medianShows={medianShows}
         tooFew={tooFew}
         days={demandDays}
+        params={params}
+        selected={
+          movieId && selectedShowtimes
+            ? { movieId, showtimes: selectedShowtimes }
+            : undefined
+        }
         presets={
           <PresetLinks
             label="ย้อนหลัง"

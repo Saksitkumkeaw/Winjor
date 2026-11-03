@@ -123,3 +123,44 @@ export async function loadShowtimeDemand(
   if (error || !data) return null;
   return data as unknown as MovieDemand[];
 }
+
+export type MovieShowtime = {
+  id: string;
+  starts_at: string;
+  theater: string;
+  sold: number;
+  capacity: number;
+};
+
+// รอบที่ยังไม่ฉายของหนังเรื่องเดียว พร้อมจำนวนที่ขายแล้ว ใช้ตัดสินใจเพิ่มหรือลดรอบ
+export async function loadMovieShowtimes(
+  supabase: Client,
+  movieId: string,
+): Promise<MovieShowtime[]> {
+  const [{ data: showtimes }, { data: seats }] = await Promise.all([
+    supabase
+      .from("showtimes")
+      .select("id, starts_at, theater_id, theaters(name), tickets(status)")
+      .eq("movie_id", movieId)
+      .eq("status", "scheduled")
+      .gt("starts_at", new Date().toISOString())
+      .order("starts_at")
+      .limit(60),
+    supabase.from("seats").select("theater_id").eq("is_active", true),
+  ]);
+
+  const capacity = new Map<string, number>();
+  for (const seat of seats ?? []) {
+    capacity.set(seat.theater_id, (capacity.get(seat.theater_id) ?? 0) + 1);
+  }
+
+  return (showtimes ?? []).map((showtime) => ({
+    id: showtime.id,
+    starts_at: showtime.starts_at,
+    theater: showtime.theaters.name,
+    sold: showtime.tickets.filter((ticket) =>
+      ["held", "paid", "used"].includes(ticket.status),
+    ).length,
+    capacity: capacity.get(showtime.theater_id) ?? 0,
+  }));
+}
