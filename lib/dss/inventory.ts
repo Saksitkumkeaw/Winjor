@@ -317,5 +317,6 @@ export function explain(plan: Plan, onHand: number, leadTimeDays: number, unit: 
     return `แนะนำสั่ง ${quantity(choice.orderQty, unit)} ตาม${label} เพราะเหลือ ${quantity(onHand, unit)} ต่ำกว่าจุดสั่งซื้อ ${quantity(plan.reorderPoint, unit)} (${formula})`;
   }
   const until = Math.max(0, (onHand - plan.reorderPoint) / plan.d);
-  return `ยังไม่ต้องสั่ง เหลือ ${quantity(onHand, unit)} สูงกว่าจุดสั่งซื้อ ${quantity(plan.reorderPoint, unit)} (${formula}) อีกราว ${until.toFixed(1)} วันจะถึงจุดสั่ง เมื่อถึงแล้วให้สั่ง ${quantity(choice.orderQty, unit)} ตาม${label}`;
+  const when = until < 1 ? "อีกไม่ถึง 1 วัน" : `อีกราว ${until.toFixed(1)} วัน`;
+  return `ยังไม่ต้องสั่ง เหลือ ${quantity(onHand, unit)} สูงกว่าจุดสั่งซื้อ ${quantity(plan.reorderPoint, unit)} (${formula}) ${when}จะถึงจุดสั่ง เมื่อถึงแล้วให้สั่ง ${quantity(choice.orderQty, unit)} ตาม${label}`;
 }
