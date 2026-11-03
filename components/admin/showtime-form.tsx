@@ -13,10 +13,12 @@ export function ShowtimeForm({
   movies,
   theaters,
   date,
+  movieId,
 }: {
   movies: Pick<Tables<"movies">, "id" | "title">[];
   theaters: Pick<Tables<"theaters">, "id" | "name">[];
   date: string;
+  movieId?: string;
 }) {
   const [state, formAction, pending] = useActionState(
     createShowtime,
@@ -25,13 +27,21 @@ export function ShowtimeForm({
 
   return (
     <form
+      id="new-showtime"
       action={formAction}
-      className="flex flex-col gap-3 rounded-lg border p-3"
+      className="flex scroll-mt-4 flex-col gap-3 rounded-lg border p-3"
     >
       <h2 className="font-medium">เพิ่มรอบฉาย</h2>
       <div className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]">
         <Field label="หนัง" htmlFor="movie_id">
-          <select id="movie_id" name="movie_id" className={controlClass} required>
+          <select
+            key={movieId}
+            id="movie_id"
+            name="movie_id"
+            className={controlClass}
+            defaultValue={movieId ?? ""}
+            required
+          >
             <option value="">เลือกหนัง</option>
             {movies.map((movie) => (
               <option key={movie.id} value={movie.id}>

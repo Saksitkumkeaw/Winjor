@@ -120,20 +120,71 @@ export function parseRecipeItem(
   return { ok: true, data: { ingredient_id: ingredientId, quantity } };
 }
 
-export function parseIngredient(
-  form: FormData,
-): Parsed<{ name: string; unit: string; reorder_level: number }> {
+function decimal(form: FormData, field: string): number {
+  const value = text(form, field);
+  return /^\d+(\.\d{1,4})?$/.test(value) ? Number(value) : Number.NaN;
+}
+
+export function parseIngredient(form: FormData): Parsed<{
+  name: string;
+  unit: string;
+  reorder_level: number;
+  unit_cost: number;
+  order_cost: number;
+  holding_rate: number;
+  lead_time_days: number;
+  discount_min_qty: number | null;
+  discount_pct: number | null;
+}> {
   const name = text(form, "name");
   const unit = text(form, "unit");
   const reorderLevel = amount(form, "reorder_level");
+  const unitCost = decimal(form, "unit_cost");
+  const orderCost = amount(form, "order_cost");
+  const holdingPct = amount(form, "holding_pct");
+  const leadTime = integer(form, "lead_time_days");
+  const hasDiscount = Boolean(text(form, "discount_min_qty") || text(form, "discount_pct"));
+  const discountMinQty = amount(form, "discount_min_qty");
+  const discountPct = amount(form, "discount_pct");
 
   if (!name) return fail("กรุณากรอกชื่อวัตถุดิบ");
   if (!unit) return fail("กรุณากรอกหน่วย");
   if (Number.isNaN(reorderLevel)) {
     return fail("จุดแจ้งเตือนต้องเป็นตัวเลขตั้งแต่ 0");
   }
+  if (Number.isNaN(unitCost)) return fail("ต้นทุนต่อหน่วยต้องเป็นตัวเลขตั้งแต่ 0");
+  if (Number.isNaN(orderCost)) return fail("ค่าสั่งซื้อต่อครั้งต้องเป็นตัวเลขตั้งแต่ 0");
+  if (Number.isNaN(holdingPct) || holdingPct > 100) {
+    return fail("อัตราค่าเก็บรักษาต้องอยู่ระหว่าง 0-100%");
+  }
+  if (Number.isNaN(leadTime) || leadTime > 60) {
+    return fail("เวลารอของต้องเป็นจำนวนวันเต็ม 0-60 วัน");
+  }
+  if (
+    hasDiscount &&
+    (Number.isNaN(discountMinQty) ||
+      discountMinQty <= 0 ||
+      Number.isNaN(discountPct) ||
+      discountPct <= 0 ||
+      discountPct >= 100)
+  ) {
+    return fail("ส่วนลดต้องกรอกทั้งจำนวนขั้นต่ำและเปอร์เซ็นต์ที่มากกว่า 0 และน้อยกว่า 100");
+  }
 
-  return { ok: true, data: { name, unit, reorder_level: reorderLevel } };
+  return {
+    ok: true,
+    data: {
+      name,
+      unit,
+      reorder_level: reorderLevel,
+      unit_cost: unitCost,
+      order_cost: orderCost,
+      holding_rate: holdingPct / 100,
+      lead_time_days: leadTime,
+      discount_min_qty: hasDiscount ? discountMinQty : null,
+      discount_pct: hasDiscount ? discountPct : null,
+    },
+  };
 }
 
 export function parseStockChange(form: FormData): Parsed<{

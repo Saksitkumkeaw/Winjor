@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { AdminSection } from "@/components/admin/admin-section";
 import { ShowtimeForm } from "@/components/admin/showtime-form";
+import { PresetLinks } from "@/components/dss/parts";
+import { ShowtimeDemand } from "@/components/dss/showtime-demand";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cancelShowtime } from "@/lib/admin/actions";
@@ -11,6 +13,12 @@ import {
   nextDate,
   toBangkokIso,
 } from "@/lib/admin/format";
+import {
+  loadMovieShowtimes,
+  loadShowtimeDemand,
+  parseDemandDays,
+} from "@/lib/dss/queries";
+import { adviseShowtimes, DEMAND_PRESETS } from "@/lib/dss/showtimes";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "จัดการรอบฉาย" };
@@ -20,14 +28,15 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 async function Showtimes({
   searchParams,
 }: Pick<PageProps<"/admin/showtimes">, "searchParams">) {
-  const { date: requestedDate } = await searchParams;
+  const { date: requestedDate, demand, movie } = await searchParams;
   const date =
     typeof requestedDate === "string" && DATE_PATTERN.test(requestedDate)
       ? requestedDate
       : bangkokDate(new Date());
+  const demandDays = parseDemandDays(demand);
 
   const supabase = await createClient();
-  const [{ data: showtimes }, { data: movies }, { data: theaters }] =
+  const [{ data: showtimes }, { data: movies }, { data: theaters }, demandRows] =
     await Promise.all([
       supabase
         .from("showtimes")
@@ -48,7 +57,24 @@ async function Showtimes({
         .select("id, name")
         .eq("is_active", true)
         .order("name"),
+      loadShowtimeDemand(supabase, demandDays),
     ]);
+  // หนังที่ออกโรงแล้วไม่นำมาแนะนำ แต่บอกไว้ว่าออกไปแล้ว
+  const activeIds = new Set(movies?.map((item) => item.id));
+  const { advice, medianShows, tooFew } = adviseShowtimes(
+    (demandRows ?? []).filter((row) => activeIds.has(row.movie_id)),
+  );
+  const ended = (demandRows ?? [])
+    .filter((row) => !activeIds.has(row.movie_id))
+    .map((row) => row.title);
+  const movieId =
+    typeof movie === "string" && movies?.some((item) => item.id === movie)
+      ? movie
+      : undefined;
+  const selectedShowtimes = movieId
+    ? await loadMovieShowtimes(supabase, movieId)
+    : null;
+  const params = { date, demand: String(demandDays) };
 
   return (
     <>
@@ -68,10 +94,35 @@ async function Showtimes({
         </form>
       </div>
 
+      <ShowtimeDemand
+        advice={advice}
+        medianShows={medianShows}
+        tooFew={tooFew}
+        days={demandDays}
+        params={params}
+        ended={ended}
+        selected={
+          movieId && selectedShowtimes
+            ? { movieId, showtimes: selectedShowtimes }
+            : undefined
+        }
+        presets={
+          <PresetLinks
+            label="ย้อนหลัง"
+            name="demand"
+            values={DEMAND_PRESETS}
+            current={demandDays}
+            params={{ date }}
+            suffix=" วัน"
+          />
+        }
+      />
+
       <ShowtimeForm
         movies={movies ?? []}
         theaters={theaters ?? []}
         date={date}
+        movieId={movieId}
       />
 
       {showtimes?.length ? (

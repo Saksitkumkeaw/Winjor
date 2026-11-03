@@ -110,27 +110,45 @@ export type Database = {
       ingredients: {
         Row: {
           created_at: string;
+          discount_min_qty: number | null;
+          discount_pct: number | null;
+          holding_rate: number;
           id: string;
+          lead_time_days: number;
           name: string;
+          order_cost: number;
           quantity_on_hand: number;
           reorder_level: number;
           unit: string;
+          unit_cost: number;
         };
         Insert: {
           created_at?: string;
+          discount_min_qty?: number | null;
+          discount_pct?: number | null;
+          holding_rate?: number;
           id?: string;
+          lead_time_days?: number;
           name: string;
+          order_cost?: number;
           quantity_on_hand?: number;
           reorder_level?: number;
           unit: string;
+          unit_cost?: number;
         };
         Update: {
           created_at?: string;
+          discount_min_qty?: number | null;
+          discount_pct?: number | null;
+          holding_rate?: number;
           id?: string;
+          lead_time_days?: number;
           name?: string;
+          order_cost?: number;
           quantity_on_hand?: number;
           reorder_level?: number;
           unit?: string;
+          unit_cost?: number;
         };
         Relationships: [];
       };
@@ -447,6 +465,78 @@ export type Database = {
         };
         Relationships: [];
       };
+      reorder_decisions: {
+        Row: {
+          approved_option: Database["public"]["Enums"]["reorder_option"];
+          approved_qty: number;
+          created_at: string;
+          created_by: string | null;
+          d: number;
+          demand_adjust_pct: number;
+          id: string;
+          ingredient_id: string;
+          lead_time_days: number;
+          on_hand: number;
+          order_cost: number;
+          recommended_option: Database["public"]["Enums"]["reorder_option"];
+          recommended_qty: number;
+          rop: number;
+          service_level: number;
+          sigma: number;
+        };
+        Insert: {
+          approved_option: Database["public"]["Enums"]["reorder_option"];
+          approved_qty: number;
+          created_at?: string;
+          created_by?: string | null;
+          d: number;
+          demand_adjust_pct?: number;
+          id?: string;
+          ingredient_id: string;
+          lead_time_days: number;
+          on_hand: number;
+          order_cost: number;
+          recommended_option: Database["public"]["Enums"]["reorder_option"];
+          recommended_qty: number;
+          rop: number;
+          service_level: number;
+          sigma: number;
+        };
+        Update: {
+          approved_option?: Database["public"]["Enums"]["reorder_option"];
+          approved_qty?: number;
+          created_at?: string;
+          created_by?: string | null;
+          d?: number;
+          demand_adjust_pct?: number;
+          id?: string;
+          ingredient_id?: string;
+          lead_time_days?: number;
+          on_hand?: number;
+          order_cost?: number;
+          recommended_option?: Database["public"]["Enums"]["reorder_option"];
+          recommended_qty?: number;
+          rop?: number;
+          service_level?: number;
+          sigma?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reorder_decisions_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reorder_decisions_ingredient_id_fkey";
+            columns: ["ingredient_id"];
+            isOneToOne: false;
+            referencedRelation: "ingredients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       scan_logs: {
         Row: {
           created_at: string;
@@ -712,6 +802,12 @@ export type Database = {
     };
     Functions: {
       sales_report: { Args: { p_from: string; p_to: string }; Returns: Json };
+      admin_today_summary: { Args: never; Returns: Json };
+      ingredient_daily_usage: {
+        Args: { p_from: string; p_to: string };
+        Returns: Json;
+      };
+      showtime_demand: { Args: { p_from: string; p_to: string }; Returns: Json };
       apply_points: {
         Args: { p_order_id: string; p_points: number };
         Returns: undefined;
@@ -793,6 +889,7 @@ export type Database = {
       payment_method: "card" | "promptpay" | "cash";
       payment_status: "pending" | "succeeded" | "failed" | "refunded";
       point_type: "earn" | "redeem" | "reverse";
+      reorder_option: "A" | "B" | "C";
       showtime_status: "scheduled" | "cancelled";
       stock_reason: "purchase" | "sale" | "adjustment";
       ticket_status: "held" | "paid" | "used" | "released" | "refunded";
