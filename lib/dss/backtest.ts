@@ -14,6 +14,8 @@ export type SimulationResult = {
   cyclesWithoutStockout: number;
   serviceLevel: number | null;
   stockoutDays: number;
+  // สัดส่วนวันที่มีของพอขาย ใช้ดูคู่กับ serviceLevel เมื่อรอบสั่งมีน้อย
+  inStockRate: number;
   orderingCost: number;
   holdingCost: number;
   totalCost: number;
@@ -76,6 +78,7 @@ export function simulate({
     cyclesWithoutStockout,
     serviceLevel: finished.length ? cyclesWithoutStockout / finished.length : null,
     stockoutDays,
+    inStockRate: usage.length ? 1 - stockoutDays / usage.length : 1,
     orderingCost,
     holdingCost,
     totalCost: orderingCost + holdingCost,

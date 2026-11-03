@@ -25,6 +25,7 @@ describe("simulate", () => {
     expect(result.stockoutDays).toBe(0);
     expect(result.cycles).toBeGreaterThan(0);
     expect(result.serviceLevel).toBe(1);
+    expect(result.inStockRate).toBe(1);
     expect(result.orderingCost).toBe(result.orders * 100);
   });
 

@@ -8,7 +8,7 @@ import {
   StatusBadge,
   Tile,
 } from "@/components/dss/parts";
-import { mean, SERVICE_LEVELS } from "@/lib/dss/inventory";
+import { SERVICE_LEVELS } from "@/lib/dss/inventory";
 import {
   LOOKBACK_PRESETS,
   loadIngredientPlans,
@@ -43,12 +43,22 @@ async function Planning({
   const toOrder = rows.filter((row) => row.plan.status === "order");
   const soon = rows.filter((row) => row.plan.status === "soon");
 
-  const serviceOf = (key: "A" | "B") =>
-    rows
-      .map((row) => row.backtest?.policies.find((policy) => policy.key === key)?.result.serviceLevel)
-      .filter((value): value is number => typeof value === "number");
-  const dssService = serviceOf("B");
-  const legacyService = serviceOf("A");
+  // รวมรอบสั่งของทุกวัตถุดิบก่อนหาร เพราะแต่ละตัวมีรอบสั่งในช่วงทดสอบไม่กี่รอบ
+  const pooled = (key: "A" | "B") => {
+    const results = rows.flatMap(
+      (row) => row.backtest?.policies.find((policy) => policy.key === key)?.result ?? [],
+    );
+    const cycles = results.reduce((sum, result) => sum + result.cycles, 0);
+    return {
+      service: cycles
+        ? results.reduce((sum, result) => sum + result.cyclesWithoutStockout, 0) / cycles
+        : null,
+      cycles,
+      stockoutDays: results.reduce((sum, result) => sum + result.stockoutDays, 0),
+    };
+  };
+  const dssService = pooled("B");
+  const legacyService = pooled("A");
 
   return (
     <>
@@ -92,8 +102,8 @@ async function Planning({
         />
         <Tile
           label="ระดับบริการจาก backtest"
-          value={dssService.length ? formatPercent(mean(dssService)) : "–"}
-          note={`เป้า ${serviceLevel}% · วิธีเดิมได้ ${legacyService.length ? formatPercent(mean(legacyService)) : "–"}`}
+          value={formatPercent(dssService.service)}
+          note={`เป้า ${serviceLevel}% จาก ${dssService.cycles} รอบสั่ง · วิธีเดิมได้ ${formatPercent(legacyService.service)} · ของขาด ${dssService.stockoutDays} เทียบ ${legacyService.stockoutDays} วัน`}
         />
       </div>
 

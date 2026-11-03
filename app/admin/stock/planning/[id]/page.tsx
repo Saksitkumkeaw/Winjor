@@ -134,6 +134,7 @@ async function Decision({
                     <th className="p-2 text-right font-medium">ระดับบริการจริง</th>
                     <th className="p-2 text-right font-medium">รอบสั่ง</th>
                     <th className="p-2 text-right font-medium">วันที่ของขาด</th>
+                    <th className="p-2 text-right font-medium">วันที่มีของ</th>
                     <th className="p-2 text-right font-medium">ค่าสั่ง</th>
                     <th className="p-2 text-right font-medium">ค่าเก็บ</th>
                     <th className="p-2 text-right font-medium">รวม {TEST_DAYS} วัน</th>
@@ -150,9 +151,15 @@ async function Decision({
                       </td>
                       <td className="p-2 text-right tabular-nums">
                         {formatPercent(result.serviceLevel)}
+                        <div className="text-xs text-muted-foreground">
+                          {result.cyclesWithoutStockout}/{result.cycles} รอบ
+                        </div>
                       </td>
                       <td className="p-2 text-right tabular-nums">{result.orders}</td>
                       <td className="p-2 text-right tabular-nums">{result.stockoutDays}</td>
+                      <td className="p-2 text-right tabular-nums">
+                        {formatPercent(result.inStockRate)}
+                      </td>
                       <td className="p-2 text-right tabular-nums">{baht(result.orderingCost)}</td>
                       <td className="p-2 text-right tabular-nums">{baht(result.holdingCost)}</td>
                       <td className="p-2 text-right tabular-nums">{baht(result.totalCost)}</td>
