@@ -84,9 +84,50 @@ describe("parseRecipeItem", () => {
 });
 
 describe("parseIngredient", () => {
+  const valid = {
+    name: "ข้าวโพดคั่ว",
+    unit: "กรัม",
+    reorder_level: "3000",
+    unit_cost: "0.08",
+    order_cost: "100",
+    holding_pct: "25",
+    lead_time_days: "3",
+    discount_min_qty: "",
+    discount_pct: "",
+  };
+
   it("ต้องมีหน่วย", () => {
-    const missing = { name: "เนย", unit: "", reorder_level: "10" };
-    expect(parseIngredient(form(missing)).ok).toBe(false);
+    expect(parseIngredient(form({ ...valid, unit: "" })).ok).toBe(false);
+  });
+
+  it("แปลงอัตราค่าเก็บรักษาจากเปอร์เซ็นต์ และไม่มีส่วนลดได้", () => {
+    expect(parseIngredient(form(valid))).toMatchObject({
+      ok: true,
+      data: {
+        unit_cost: 0.08,
+        holding_rate: 0.25,
+        lead_time_days: 3,
+        discount_min_qty: null,
+        discount_pct: null,
+      },
+    });
+  });
+
+  it("ส่วนลดต้องกรอกครบทั้งสองช่อง", () => {
+    const withDiscount = { ...valid, discount_min_qty: "150000", discount_pct: "5" };
+    expect(parseIngredient(form(withDiscount))).toMatchObject({
+      ok: true,
+      data: { discount_min_qty: 150000, discount_pct: 5 },
+    });
+    expect(parseIngredient(form({ ...valid, discount_pct: "5" })).ok).toBe(false);
+  });
+
+  it.each([
+    ["เวลารอของไม่ใช่จำนวนเต็ม", { lead_time_days: "2.5" }],
+    ["อัตราค่าเก็บรักษาเกิน 100%", { holding_pct: "120" }],
+    ["ต้นทุนติดลบ", { unit_cost: "-1" }],
+  ])("ไม่รับ%s", (_label, change) => {
+    expect(parseIngredient(form({ ...valid, ...change })).ok).toBe(false);
   });
 });
 

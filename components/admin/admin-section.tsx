@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/admin/seat-types", label: "ราคาตั๋ว" },
   { href: "/admin/products", label: "สินค้า" },
   { href: "/admin/stock", label: "สต็อก" },
+  { href: "/admin/stock/planning", label: "วางแผนสั่งซื้อ" },
   { href: "/admin/orders", label: "คำสั่งซื้อ" },
   { href: "/admin/shifts", label: "กะงาน" },
   { href: "/admin/users", label: "ผู้ใช้" },

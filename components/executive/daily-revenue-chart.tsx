@@ -20,7 +20,13 @@ function dayLabel(date: string): string {
   }).format(new Date(`${date}T00:00:00+07:00`));
 }
 
-export function DailyRevenueChart({ points }: { points: DailyPoint[] }) {
+export function DailyRevenueChart({
+  points,
+  height = CHART_HEIGHT,
+}: {
+  points: DailyPoint[];
+  height?: number;
+}) {
   const [active, setActive] = useState<number>();
 
   const max = Math.max(...points.map((point) => point.revenue), 1);
@@ -44,7 +50,7 @@ export function DailyRevenueChart({ points }: { points: DailyPoint[] }) {
         )}
       </div>
 
-      <div className="relative" style={{ height: CHART_HEIGHT }}>
+      <div className="relative" style={{ height }}>
         <div className="absolute inset-x-0 top-0 border-t border-dashed" />
         <div className="absolute inset-x-0 top-1/2 border-t border-dashed" />
         <span className="absolute top-0 right-0 bg-background pl-1 text-xs text-muted-foreground">

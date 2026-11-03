@@ -294,6 +294,8 @@ export async function saveIngredient(
   }
 
   revalidatePath("/admin/stock");
+  revalidatePath("/admin/stock/planning");
+  revalidatePath("/admin/stock/planning/[id]", "page");
   return { notice: "บันทึกแล้ว" };
 }
 

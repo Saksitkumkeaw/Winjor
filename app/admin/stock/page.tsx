@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AdminSection } from "@/components/admin/admin-section";
 import { IngredientForm } from "@/components/admin/ingredient-form";
 import { StockForm } from "@/components/admin/stock-form";
@@ -43,9 +44,18 @@ async function Stock() {
           className="mb-4 rounded-lg border border-red-600 bg-red-50 p-3 text-red-950"
         >
           วัตถุดิบใกล้หมด:{" "}
-          {lowStock.map((ingredient) => ingredient.name).join(", ")}
+          {lowStock.map((ingredient) => ingredient.name).join(", ")}{" "}
+          <Link href="/admin/stock/planning" className="font-medium underline">
+            ดูว่าควรสั่งเท่าไร
+          </Link>
         </p>
-      ) : null}
+      ) : (
+        <p className="mb-4 text-sm">
+          <Link href="/admin/stock/planning" className="underline">
+            วางแผนสั่งซื้อด้วย EOQ และจุดสั่งซื้อ
+          </Link>
+        </p>
+      )}
 
       <div className="flex flex-col gap-3">
         <StockForm ingredients={ingredients ?? []} />

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { AdminSection } from "@/components/admin/admin-section";
 import { ShowtimeForm } from "@/components/admin/showtime-form";
+import { PresetLinks } from "@/components/dss/parts";
+import { ShowtimeDemand } from "@/components/dss/showtime-demand";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cancelShowtime } from "@/lib/admin/actions";
@@ -11,6 +13,8 @@ import {
   nextDate,
   toBangkokIso,
 } from "@/lib/admin/format";
+import { loadShowtimeDemand, parseDemandDays } from "@/lib/dss/queries";
+import { adviseShowtimes, DEMAND_PRESETS } from "@/lib/dss/showtimes";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "จัดการรอบฉาย" };
@@ -20,14 +24,15 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 async function Showtimes({
   searchParams,
 }: Pick<PageProps<"/admin/showtimes">, "searchParams">) {
-  const { date: requestedDate } = await searchParams;
+  const { date: requestedDate, demand, movie } = await searchParams;
   const date =
     typeof requestedDate === "string" && DATE_PATTERN.test(requestedDate)
       ? requestedDate
       : bangkokDate(new Date());
+  const demandDays = parseDemandDays(demand);
 
   const supabase = await createClient();
-  const [{ data: showtimes }, { data: movies }, { data: theaters }] =
+  const [{ data: showtimes }, { data: movies }, { data: theaters }, demandRows] =
     await Promise.all([
       supabase
         .from("showtimes")
@@ -48,7 +53,13 @@ async function Showtimes({
         .select("id, name")
         .eq("is_active", true)
         .order("name"),
+      loadShowtimeDemand(supabase, demandDays),
     ]);
+  const { advice, medianShows } = adviseShowtimes(demandRows ?? []);
+  const movieId =
+    typeof movie === "string" && movies?.some((item) => item.id === movie)
+      ? movie
+      : undefined;
 
   return (
     <>
@@ -68,10 +79,27 @@ async function Showtimes({
         </form>
       </div>
 
+      <ShowtimeDemand
+        advice={advice}
+        medianShows={medianShows}
+        days={demandDays}
+        presets={
+          <PresetLinks
+            label="ย้อนหลัง"
+            name="demand"
+            values={DEMAND_PRESETS}
+            current={demandDays}
+            params={{ date }}
+            suffix=" วัน"
+          />
+        }
+      />
+
       <ShowtimeForm
         movies={movies ?? []}
         theaters={theaters ?? []}
         date={date}
+        movieId={movieId}
       />
 
       {showtimes?.length ? (
